@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title>Trade Journal</title>
+<title>F1 Trade Journal</title>
 <style>
   :root {
     --bg:       #0d1117;
@@ -14,7 +13,9 @@
     --border:   #30363d;
     --blue:     #58a6ff;
     --green:    #3fb950;
+    --green-bg: #1a3a22;
     --red:      #f85149;
+    --red-bg:   #3a1a1a;
     --yellow:   #d29922;
     --text:     #e6edf3;
     --muted:    #8b949e;
@@ -87,8 +88,6 @@
   .stat-card .value.red   { color: var(--red); }
   .stat-card .value.blue  { color: var(--blue); }
   .stat-card .value.yellow{ color: var(--yellow); }
-
-  /* ── Wide card ── */
   .stat-card.wide {
     grid-column: 1 / -1;
     display: flex; justify-content: space-between; align-items: center;
@@ -120,7 +119,6 @@
   }
   .trade-card.win::before  { background: var(--green); }
   .trade-card.loss::before { background: var(--red); }
-
   .trade-header {
     display: flex; justify-content: space-between; align-items: flex-start;
     margin-bottom: 10px;
@@ -132,11 +130,9 @@
   }
   .trade-dir.buy  { background: rgba(88,166,255,0.15); color: var(--blue); }
   .trade-dir.sell { background: rgba(248,81,73,0.15);  color: var(--red); }
-
   .trade-pnl { text-align: right; }
   .trade-pnl .amount { font-size: 17px; font-weight: 700; }
   .trade-pnl .pct    { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
   .trade-details {
     display: grid; grid-template-columns: 1fr 1fr 1fr;
     gap: 8px;
@@ -217,12 +213,163 @@
   }
   .toast.show { opacity: 1; }
 
-  /* ── No trades ── */
+  /* ── Empty ── */
   .empty {
     text-align: center; padding: 50px 20px; color: var(--muted);
   }
   .empty .icon { font-size: 40px; margin-bottom: 12px; }
   .empty p { font-size: 14px; }
+
+  /* ════════════════════════════════════════════
+     CALENDAR PAGE
+  ════════════════════════════════════════════ */
+  #page-calendar { padding: 12px 8px; }
+
+  /* Month navigation */
+  .cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; padding: 0 4px;
+  }
+  .cal-month-label { font-size: 16px; font-weight: 700; }
+  .cal-nav-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    width: 34px; height: 34px; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cal-this-month {
+    background: rgba(88,166,255,0.12); border: 1px solid var(--blue);
+    border-radius: 8px; color: var(--blue);
+    padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+
+  /* Monthly stat strip */
+  .cal-stat-strip {
+    display: flex; gap: 8px; margin-bottom: 12px;
+    overflow-x: auto; padding-bottom: 2px; scrollbar-width: none;
+  }
+  .cal-stat-strip::-webkit-scrollbar { display: none; }
+  .cal-stat-chip {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 12px; white-space: nowrap; flex-shrink: 0;
+  }
+  .cal-stat-chip span { font-weight: 700; margin-left: 4px; }
+  .cal-stat-chip span.pos { color: var(--green); }
+  .cal-stat-chip span.neg { color: var(--red); }
+  .cal-stat-chip span.blue { color: var(--blue); }
+
+  /* Grid wrapper: calendar + week summaries */
+  .cal-outer {
+    display: flex; gap: 6px; align-items: flex-start;
+  }
+
+  /* The 7-column calendar grid */
+  .cal-grid-wrap { flex: 1; min-width: 0; }
+  .cal-dow-row {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 3px; margin-bottom: 3px;
+  }
+  .cal-dow {
+    text-align: center; font-size: 9px; font-weight: 600;
+    color: var(--muted); padding: 4px 0;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+
+  /* Individual day cell */
+  .cal-day {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 4px;
+    display: flex; flex-direction: column;
+    position: relative;
+    font-size: 9px;
+    min-height: 52px;
+    overflow: hidden;
+  }
+  .cal-day.empty-cell {
+    background: transparent; border-color: transparent;
+  }
+  .cal-day.has-trades.green-day {
+    background: var(--green-bg);
+    border-color: #2a5a35;
+  }
+  .cal-day.has-trades.red-day {
+    background: var(--red-bg);
+    border-color: #5a2a2a;
+  }
+  .cal-day .day-num {
+    font-size: 9px; color: var(--muted); font-weight: 600;
+    line-height: 1; margin-bottom: 2px;
+  }
+  .cal-day.has-trades .day-num { color: rgba(255,255,255,0.5); }
+  .cal-day .day-pnl {
+    font-size: 10px; font-weight: 700; line-height: 1.1; margin-top: 2px;
+  }
+  .cal-day.green-day .day-pnl { color: #7ee89a; }
+  .cal-day.red-day   .day-pnl { color: #ff8a85; }
+  .cal-day .day-sub {
+    font-size: 8px; color: rgba(255,255,255,0.45); margin-top: 2px; line-height: 1.2;
+  }
+  .cal-day .day-wr {
+    font-size: 8px; margin-top: 1px;
+  }
+  .cal-day.green-day .day-wr { color: rgba(126,232,154,0.7); }
+  .cal-day.red-day   .day-wr { color: rgba(255,138,133,0.7); }
+
+  /* Week summaries column */
+  .cal-weeks-col {
+    display: flex; flex-direction: column;
+    gap: 3px; width: 72px; flex-shrink: 0;
+  }
+  /* spacer to push week rows into alignment with grid rows */
+  .cal-weeks-header-spacer { height: 22px; } /* matches DOW row height */
+  .cal-week-card {
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    display: flex; flex-direction: column;
+    gap: 3px;
+  }
+  .cal-week-label { font-size: 9px; color: var(--muted); font-weight: 600; }
+  .cal-week-pnl { font-size: 13px; font-weight: 800; line-height: 1; }
+  .cal-week-pnl.pos { color: var(--green); }
+  .cal-week-pnl.neg { color: var(--red); }
+  .cal-week-days { font-size: 9px; color: var(--muted); }
+
+  /* Tap detail sheet */
+  .day-detail-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    z-index: 300; display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .day-detail-overlay.show { opacity: 1; pointer-events: all; }
+  .day-detail-sheet {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    width: 100%; padding: 20px 16px 40px;
+    transform: translateY(100%);
+    transition: transform 0.25s cubic-bezier(.22,.61,.36,1);
+    max-height: 75vh; overflow-y: auto;
+  }
+  .day-detail-overlay.show .day-detail-sheet { transform: translateY(0); }
+  .sheet-handle {
+    width: 36px; height: 4px; background: var(--border);
+    border-radius: 2px; margin: 0 auto 16px;
+  }
+  .sheet-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .sheet-total { font-size: 28px; font-weight: 800; margin-bottom: 16px; }
+  .sheet-total.pos { color: var(--green); }
+  .sheet-total.neg { color: var(--red); }
 </style>
 </head>
 <body>
@@ -247,14 +394,48 @@
 <!-- TRADES -->
 <div class="page" id="page-trades">
   <div class="filter-bar">
-    <div class="filter-pill active" data-filter="all"   onclick="setFilter('all',this)">All</div>
-    <div class="filter-pill"        data-filter="win"   onclick="setFilter('win',this)">Wins</div>
-    <div class="filter-pill"        data-filter="loss"  onclick="setFilter('loss',this)">Losses</div>
-    <div class="filter-pill"        data-filter="buy"   onclick="setFilter('buy',this)">Buy</div>
-    <div class="filter-pill"        data-filter="sell"  onclick="setFilter('sell',this)">Sell</div>
+    <div class="filter-pill active" data-filter="all"  onclick="setFilter('all',this)">All</div>
+    <div class="filter-pill"       data-filter="win"  onclick="setFilter('win',this)">Wins</div>
+    <div class="filter-pill"       data-filter="loss" onclick="setFilter('loss',this)">Losses</div>
+    <div class="filter-pill"       data-filter="buy"  onclick="setFilter('buy',this)">Buy</div>
+    <div class="filter-pill"       data-filter="sell" onclick="setFilter('sell',this)">Sell</div>
   </div>
   <div id="trades-content">
     <div class="loading"><div class="spinner"></div>Loading trades...</div>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div class="page" id="page-calendar">
+  <!-- month nav -->
+  <div class="cal-header">
+    <button class="cal-nav-btn" onclick="calShift(-1)">‹</button>
+    <div class="cal-month-label" id="cal-month-label">—</div>
+    <button class="cal-this-month" onclick="calGoToday()">This month</button>
+    <button class="cal-nav-btn" onclick="calShift(+1)">›</button>
+  </div>
+
+  <!-- monthly stats strip -->
+  <div class="cal-stat-strip" id="cal-stat-strip"></div>
+
+  <!-- calendar grid + week summaries -->
+  <div class="cal-outer">
+    <div class="cal-grid-wrap">
+      <div class="cal-dow-row">
+        <div class="cal-dow">Sun</div>
+        <div class="cal-dow">Mon</div>
+        <div class="cal-dow">Tue</div>
+        <div class="cal-dow">Wed</div>
+        <div class="cal-dow">Thu</div>
+        <div class="cal-dow">Fri</div>
+        <div class="cal-dow">Sat</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="cal-weeks-col">
+      <div class="cal-weeks-header-spacer"></div>
+      <div id="cal-weeks"></div>
+    </div>
   </div>
 </div>
 
@@ -282,7 +463,7 @@
     <div class="settings-row">
       <div>
         <div class="s-label">Version</div>
-        <div class="s-sub">1.0.0</div>
+        <div class="s-sub">1.1.0</div>
       </div>
     </div>
   </div>
@@ -298,20 +479,38 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
     Trades
   </button>
+  <button class="nav-btn" id="nav-calendar" onclick="showPage('calendar')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Calendar
+  </button>
   <button class="nav-btn" id="nav-settings" onclick="showPage('settings')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
     Settings
   </button>
 </nav>
 
+<!-- Day detail bottom sheet -->
+<div class="day-detail-overlay" id="day-overlay" onclick="closeDaySheet(event)">
+  <div class="day-detail-sheet" id="day-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheet-date"></div>
+    <div class="sheet-total" id="sheet-total"></div>
+    <div id="sheet-trades"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 // ── State ───────────────────────────────────────────────────────────────────
-let API_URL    = localStorage.getItem("tj_api_url") || "";
-let allTrades  = [];
+let API_URL      = localStorage.getItem("tj_api_url") || "";
+let allTrades    = [];
 let activeFilter = "all";
 let currentPage  = "dashboard";
+
+// Calendar state
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth(); // 0-based
 
 // ── Init ────────────────────────────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
@@ -332,14 +531,13 @@ function showPage(name) {
   document.getElementById("page-" + name).classList.add("active");
   document.getElementById("nav-" + name).classList.add("active");
   currentPage = name;
+  if (name === "calendar") renderCalendar();
 }
 
 // ── Settings ─────────────────────────────────────────────────────────────────
 function saveSettings() {
   const url = document.getElementById("api-url-input").value.trim();
-  if (!url || !url.startsWith("https://")) {
-    showToast("Please enter a valid HTTPS URL"); return;
-  }
+  if (!url || !url.startsWith("https://")) { showToast("Please enter a valid HTTPS URL"); return; }
   localStorage.setItem("tj_api_url", url);
   API_URL = url;
   showToast("Saved! Loading data...");
@@ -374,7 +572,7 @@ async function loadTrades() {
   try {
     const res  = await fetch(API_URL + "?action=getTrades", { cache: "no-store" });
     const json = await res.json();
-    if (json.status === "ok") { allTrades = json.trades || []; renderTrades(); }
+    if (json.status === "ok") { allTrades = json.trades || []; renderTrades(); if (currentPage === "calendar") renderCalendar(); }
     else throw new Error(json.message);
   } catch(e) {
     document.getElementById("trades-content").innerHTML =
@@ -386,62 +584,26 @@ async function loadTrades() {
 function renderDashboard(s) {
   if (!s || s.totalTrades === 0) {
     document.getElementById("dashboard-content").innerHTML =
-      '<div class="empty"><div class="icon">📭</div><p>No trades recorded yet.<br>Start trading with MT5 and trades will appear here.</p></div>';
+      '<div class="empty"><div class="icon">📭</div><p>No trades recorded yet.</p></div>';
     return;
   }
-
-  const wr     = s.winRate || 0;
-  const net    = s.totalNet || 0;
-  const pf     = s.profitFactor || 0;
-  const rr     = s.avgRR || 0;
-
+  const wr = s.winRate || 0, net = s.totalNet || 0, pf = s.profitFactor || 0, rr = s.avgRR || 0;
   document.getElementById("dashboard-content").innerHTML = `
     <div class="stats-grid">
       <div class="stat-card wide">
-        <div class="side">
-          <div class="label">Total Trades</div>
-          <div class="value blue">${s.totalTrades}</div>
-        </div>
+        <div class="side"><div class="label">Total Trades</div><div class="value blue">${s.totalTrades}</div></div>
         <div class="divider"></div>
-        <div class="side">
-          <div class="label">Win Rate</div>
-          <div class="value ${wr >= 50 ? 'green':'red'}">${wr}%</div>
-        </div>
+        <div class="side"><div class="label">Win Rate</div><div class="value ${wr>=50?'green':'red'}">${wr}%</div></div>
         <div class="divider"></div>
-        <div class="side">
-          <div class="label">W / L</div>
-          <div class="value">${s.wins} / ${s.losses}</div>
-        </div>
+        <div class="side"><div class="label">W / L</div><div class="value">${s.wins} / ${s.losses}</div></div>
       </div>
-
-      <div class="stat-card">
-        <div class="label">Net P&amp;L</div>
-        <div class="value ${net >= 0 ? 'green':'red'}">${net >= 0 ? '+' : ''}$${net}</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Profit Factor</div>
-        <div class="value ${pf >= 1 ? 'green':'red'}">${pf}</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="label">Avg R:R</div>
-        <div class="value ${rr >= 1 ? 'green':'yellow'}">${rr}R</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Avg P&amp;L %</div>
-        <div class="value ${s.avgPnlPct >= 0 ? 'green':'red'}">${s.avgPnlPct}%</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="label">Best Trade</div>
-        <div class="value green">+$${s.bestTrade}</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Worst Trade</div>
-        <div class="value red">$${s.worstTrade}</div>
-      </div>
-    </div>
-  `;
+      <div class="stat-card"><div class="label">Net P&amp;L</div><div class="value ${net>=0?'green':'red'}">${net>=0?'+':''}$${net}</div></div>
+      <div class="stat-card"><div class="label">Profit Factor</div><div class="value ${pf>=1?'green':'red'}">${pf}</div></div>
+      <div class="stat-card"><div class="label">Avg R:R</div><div class="value ${rr>=1?'green':'yellow'}">${rr}R</div></div>
+      <div class="stat-card"><div class="label">Avg P&amp;L %</div><div class="value ${s.avgPnlPct>=0?'green':'red'}">${s.avgPnlPct}%</div></div>
+      <div class="stat-card"><div class="label">Best Trade</div><div class="value green">+$${s.bestTrade}</div></div>
+      <div class="stat-card"><div class="label">Worst Trade</div><div class="value red">$${s.worstTrade}</div></div>
+    </div>`;
 }
 
 // ── Render Trades ─────────────────────────────────────────────────────────────
@@ -451,74 +613,214 @@ function setFilter(f, el) {
   el.classList.add("active");
   renderTrades();
 }
-
 function renderTrades() {
   let trades = allTrades;
-
   if (activeFilter === "win")  trades = trades.filter(t => t["Result"] === "WIN");
   if (activeFilter === "loss") trades = trades.filter(t => t["Result"] === "LOSS");
   if (activeFilter === "buy")  trades = trades.filter(t => (t["Direction"]||"").toLowerCase().includes("buy"));
   if (activeFilter === "sell") trades = trades.filter(t => (t["Direction"]||"").toLowerCase().includes("sell"));
-
-  if (trades.length === 0) {
+  if (!trades.length) {
     document.getElementById("trades-content").innerHTML =
       '<div class="empty"><div class="icon">🔍</div><p>No trades match this filter.</p></div>';
     return;
   }
-
   const html = trades.map(t => {
-    const isWin  = t["Result"] === "WIN";
-    const isLong = (t["Direction"]||"").toLowerCase().includes("buy");
-    const net    = parseFloat(t["Net P&L"] || 0);
-    const pct    = parseFloat(t["P&L %"]   || 0);
-    const rr     = parseFloat(t["R:R"]     || 0);
-
+    const isWin = t["Result"]==="WIN", isLong = (t["Direction"]||"").toLowerCase().includes("buy");
+    const net = parseFloat(t["Net P&L"]||0), pct = parseFloat(t["P&L %"]||0), rr = parseFloat(t["R:R"]||0);
     return `
-      <div class="trade-card ${isWin ? 'win' : 'loss'}">
+      <div class="trade-card ${isWin?'win':'loss'}">
         <div class="trade-header">
           <div>
-            <div class="trade-symbol">${t["Symbol"] || "—"}</div>
-            <div class="trade-dir ${isLong ? 'buy':'sell'}">${isLong ? '▲ Buy' : '▼ Sell'}</div>
+            <div class="trade-symbol">${t["Symbol"]||"—"}</div>
+            <div class="trade-dir ${isLong?'buy':'sell'}">${isLong?'▲ Buy':'▼ Sell'}</div>
           </div>
           <div class="trade-pnl">
-            <div class="amount" style="color:${isWin ? 'var(--green)':'var(--red)'}">
-              ${net >= 0 ? '+' : ''}$${Math.round(net*100)/100}
+            <div class="amount" style="color:${isWin?'var(--green)':'var(--red)'}">
+              ${net>=0?'+':''}$${Math.round(net*100)/100}
             </div>
-            <div class="pct">${pct >= 0 ? '+' : ''}${Math.round(pct*100)/100}%</div>
+            <div class="pct">${pct>=0?'+':''}${Math.round(pct*100)/100}%</div>
           </div>
         </div>
         <div class="trade-details">
-          <div class="detail-item">
-            <div class="d-label">Entry</div>
-            <div class="d-val">${t["Entry Price"] || "—"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="d-label">Exit</div>
-            <div class="d-val">${t["Exit Price"] || "—"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="d-label">R:R</div>
-            <div class="d-val" style="color:${rr >= 1 ? 'var(--green)':'var(--yellow)'}">
-              ${Math.round(rr*100)/100}R
-            </div>
-          </div>
-          <div class="detail-item">
-            <div class="d-label">Lots</div>
-            <div class="d-val">${t["Volume (Lots)"] || "—"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="d-label">Duration</div>
-            <div class="d-val">${t["Duration"] || "—"}</div>
-          </div>
-          <div class="detail-item">
-            <div class="d-label">Close</div>
-            <div class="d-val" style="font-size:10px">${(t["Close Time"]||"—").split(" ")[1] || t["Close Time"] || "—"}</div>
-          </div>
+          <div class="detail-item"><div class="d-label">Entry</div><div class="d-val">${t["Entry Price"]||"—"}</div></div>
+          <div class="detail-item"><div class="d-label">Exit</div><div class="d-val">${t["Exit Price"]||"—"}</div></div>
+          <div class="detail-item"><div class="d-label">R:R</div><div class="d-val" style="color:${rr>=1?'var(--green)':'var(--yellow)'}">${Math.round(rr*100)/100}R</div></div>
+          <div class="detail-item"><div class="d-label">Lots</div><div class="d-val">${t["Volume (Lots)"]||"—"}</div></div>
+          <div class="detail-item"><div class="d-label">Duration</div><div class="d-val">${t["Duration"]||"—"}</div></div>
+          <div class="detail-item"><div class="d-label">Close</div><div class="d-val" style="font-size:10px">${(t["Close Time"]||"—").split(" ")[1]||t["Close Time"]||"—"}</div></div>
         </div>
       </div>`;
   }).join("");
-
   document.getElementById("trades-content").innerHTML = html;
+}
+
+// ════════════════════════════════════════════
+// CALENDAR LOGIC
+// ════════════════════════════════════════════
+
+function calShift(delta) {
+  calMonth += delta;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+function calGoToday() {
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  renderCalendar();
+}
+
+// Parse close time field → YYYY-MM-DD key
+function tradeDate(t) {
+  const raw = t["Close Time"] || t["Open Time"] || "";
+  if (!raw) return null;
+  // Accepts "2025.01.06 12:34" or "2025-01-06 12:34" or ISO
+  const m = raw.match(/(\d{4})[.\-\/](\d{2})[.\-\/](\d{2})/);
+  if (!m) return null;
+  return `${m[1]}-${m[2]}-${m[3]}`;
+}
+
+function fmtK(v) {
+  const abs = Math.abs(v);
+  if (abs >= 1000) return (v < 0 ? '-' : '') + '$' + (abs/1000).toFixed(abs >= 10000 ? 0 : 2) + 'K';
+  return (v < 0 ? '-$' : '$') + abs.toFixed(0);
+}
+
+function renderCalendar() {
+  // Month label
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("cal-month-label").textContent = `${monthNames[calMonth]} ${calYear}`;
+
+  // Build day-map from trades for this month
+  const dayMap = {}; // key "YYYY-MM-DD" → { net, wins, losses, trades[] }
+  allTrades.forEach(t => {
+    const dk = tradeDate(t);
+    if (!dk) return;
+    const [y, m] = dk.split("-").map(Number);
+    if (y !== calYear || m-1 !== calMonth) return;
+    if (!dayMap[dk]) dayMap[dk] = { net: 0, wins: 0, losses: 0, trades: [] };
+    const net = parseFloat(t["Net P&L"] || 0);
+    dayMap[dk].net += net;
+    if (t["Result"] === "WIN") dayMap[dk].wins++;
+    else dayMap[dk].losses++;
+    dayMap[dk].trades.push(t);
+  });
+
+  // Monthly stats strip
+  let monthNet = 0, monthWins = 0, monthLosses = 0, tradingDays = 0;
+  Object.values(dayMap).forEach(d => { monthNet += d.net; monthWins += d.wins; monthLosses += d.losses; tradingDays++; });
+  const monthTotal = monthWins + monthLosses;
+  const monthWR = monthTotal > 0 ? Math.round(monthWins/monthTotal*100) : 0;
+  document.getElementById("cal-stat-strip").innerHTML = `
+    <div class="cal-stat-chip">Monthly P&L<span class="${monthNet>=0?'pos':'neg'}">${fmtK(monthNet)}</span></div>
+    <div class="cal-stat-chip">Win Rate<span class="${monthWR>=50?'pos':'neg'}">${monthWR}%</span></div>
+    <div class="cal-stat-chip">Days<span class="blue">${tradingDays}</span></div>
+    <div class="cal-stat-chip">Trades<span class="blue">${monthTotal}</span></div>
+  `;
+
+  // Calendar grid
+  const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+
+  // Collect cells
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null); // empty
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  // Pad to full 6-row grid if needed
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  // Week summaries
+  const weekRows = [];
+  for (let w = 0; w < cells.length/7; w++) {
+    const slice = cells.slice(w*7, w*7+7);
+    let wNet = 0, wDays = 0;
+    slice.forEach(d => {
+      if (!d) return;
+      const dk = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if (dayMap[dk]) { wNet += dayMap[dk].net; wDays++; }
+    });
+    weekRows.push({ wNet, wDays });
+  }
+
+  // Render grid cells
+  const gridHTML = cells.map(d => {
+    if (!d) return `<div class="cal-day empty-cell"></div>`;
+    const dk = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const data = dayMap[dk];
+    if (!data) {
+      return `<div class="cal-day"><div class="day-num">${d}</div></div>`;
+    }
+    const total = data.wins + data.losses;
+    const wr = total > 0 ? Math.round(data.wins/total*100) : 0;
+    const isGreen = data.net >= 0;
+    return `
+      <div class="cal-day has-trades ${isGreen?'green-day':'red-day'}" onclick="openDaySheet('${dk}')">
+        <div class="day-num">${d}</div>
+        <div class="day-pnl">${fmtK(data.net)}</div>
+        <div class="day-sub">${total} trade${total!==1?'s':''}</div>
+        <div class="day-wr">${wr}%</div>
+      </div>`;
+  }).join("");
+  document.getElementById("cal-grid").innerHTML = gridHTML;
+
+  // Render week summaries
+  const weeksHTML = weekRows.map((w, i) => `
+    <div class="cal-week-card">
+      <div class="cal-week-label">Week ${i+1}</div>
+      <div class="cal-week-pnl ${w.wNet>=0?'pos':'neg'}">${fmtK(w.wNet)}</div>
+      <div class="cal-week-days">${w.wDays} day${w.wDays!==1?'s':''}</div>
+    </div>`).join("");
+  document.getElementById("cal-weeks").innerHTML = weeksHTML;
+}
+
+// ── Day Detail Sheet ──────────────────────────────────────────────────────────
+function openDaySheet(dk) {
+  const trades = allTrades.filter(t => tradeDate(t) === dk);
+  if (!trades.length) return;
+
+  const net = trades.reduce((s, t) => s + parseFloat(t["Net P&L"]||0), 0);
+  const [y,m,d] = dk.split("-");
+  const dateObj = new Date(+y, +m-1, +d);
+  const label = dateObj.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  document.getElementById("sheet-date").textContent = label;
+  const totEl = document.getElementById("sheet-total");
+  totEl.textContent = (net >= 0 ? '+' : '') + '$' + Math.round(net*100)/100;
+  totEl.className = "sheet-total " + (net >= 0 ? "pos" : "neg");
+
+  const tradesHTML = trades.map(t => {
+    const isWin = t["Result"]==="WIN";
+    const isLong = (t["Direction"]||"").toLowerCase().includes("buy");
+    const tNet = parseFloat(t["Net P&L"]||0);
+    return `
+      <div class="trade-card ${isWin?'win':'loss'}" style="margin-bottom:8px;">
+        <div class="trade-header">
+          <div>
+            <div class="trade-symbol">${t["Symbol"]||"—"}</div>
+            <div class="trade-dir ${isLong?'buy':'sell'}">${isLong?'▲ Buy':'▼ Sell'}</div>
+          </div>
+          <div class="trade-pnl">
+            <div class="amount" style="color:${isWin?'var(--green)':'var(--red)'}">
+              ${tNet>=0?'+':''}$${Math.round(tNet*100)/100}
+            </div>
+          </div>
+        </div>
+        <div class="trade-details">
+          <div class="detail-item"><div class="d-label">Entry</div><div class="d-val">${t["Entry Price"]||"—"}</div></div>
+          <div class="detail-item"><div class="d-label">Exit</div><div class="d-val">${t["Exit Price"]||"—"}</div></div>
+          <div class="detail-item"><div class="d-label">R:R</div><div class="d-val">${parseFloat(t["R:R"]||0).toFixed(2)}R</div></div>
+        </div>
+      </div>`;
+  }).join("");
+  document.getElementById("sheet-trades").innerHTML = tradesHTML;
+  document.getElementById("day-overlay").classList.add("show");
+}
+function closeDaySheet(e) {
+  if (e.target === document.getElementById("day-overlay")) {
+    document.getElementById("day-overlay").classList.remove("show");
+  }
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
