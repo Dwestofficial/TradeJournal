@@ -602,7 +602,7 @@ function getAccounts() {
   const map = {};
   allTrades.forEach(t => {
     const id = String(t["Account ID"] || "Unknown");
-    if (!map[id]) map[id] = {tag: t["Account Tag"]|| name: t["Account Name"]||"", server: t["Account Server"]||"", currency: t["Account Currency"]||"" };
+    if (!map[id]) map[id] = { id, tag: t["Account Tag"]||id, name: t["Account Name"]||"", server: t["Account Server"]||"", currency: t["Account Currency"]||"" };
   });
   return Object.values(map).sort((a,b) => a.tag.localeCompare(b.tag));
 }
