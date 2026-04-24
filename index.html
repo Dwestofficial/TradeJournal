@@ -43,10 +43,11 @@
     width: 40px; height: 40px; border-radius: 8px;
     border: 1px solid rgba(255,255,255,0.1);
     box-shadow: 0 0 8px rgba(63,185,80,0.3);
-    background: var(--surface2);
+    background: #1a1a1a;
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
+    overflow: hidden;
   }
+  .topbar-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
   .topbar-title-block { display: flex; flex-direction: column; }
   .topbar h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
   .topbar .subtitle { font-size: 11px; color: var(--muted); margin-top: 1px; }
@@ -145,7 +146,7 @@
   .review-stars-small { font-size: 11px; letter-spacing: 1px; }
   .review-thumb-tiny {
     width: 28px; height: 28px; border-radius: 6px; object-fit: cover;
-    border: 1px solid var(--border); flex-shrink: 0;
+    border: 1px solid var(--border); flex-shrink: 0; cursor: pointer;
   }
   .review-thought-preview {
     font-size: 11px; color: var(--muted); flex: 1;
@@ -291,6 +292,9 @@
   .sheet-total.pos { color: var(--green); }
   .sheet-total.neg { color: var(--red); }
 
+  /* ═══════════════════════════════════════════
+     REVIEW MODAL
+  ═══════════════════════════════════════════ */
   .review-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500;
     display: flex; align-items: flex-end; opacity: 0; pointer-events: none;
@@ -357,6 +361,7 @@
   }
   .screenshot-preview-img {
     width: 100%; max-height: 240px; object-fit: cover; display: block;
+    cursor: zoom-in;
   }
   .screenshot-preview-actions {
     position: absolute; top: 8px; right: 8px; display: flex; gap: 6px;
@@ -408,6 +413,35 @@
     opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 600;
   }
   .toast.show { opacity: 1; }
+
+  /* ═══════════════════════════════════════════
+     FULLSCREEN IMAGE LIGHTBOX
+  ═══════════════════════════════════════════ */
+  .lightbox-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .lightbox-overlay.show { opacity: 1; pointer-events: all; }
+  .lightbox-img {
+    max-width: 95vw; max-height: 90vh;
+    object-fit: contain; border-radius: 8px;
+    box-shadow: 0 0 60px rgba(0,0,0,0.8);
+    transition: transform 0.2s;
+  }
+  .lightbox-close {
+    position: fixed; top: 16px; right: 16px;
+    background: rgba(22,27,34,0.9); border: 1px solid var(--border);
+    border-radius: 50%; width: 40px; height: 40px;
+    color: var(--text); font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1001;
+  }
+  .lightbox-hint {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; color: var(--muted); background: rgba(22,27,34,0.8);
+    padding: 6px 16px; border-radius: 20px; pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -416,7 +450,10 @@
 <div class="topbar">
   <div class="topbar-row1">
     <div class="topbar-left">
-      <div class="topbar-logo">🏎</div>
+      <div class="topbar-logo" id="topbar-logo-wrap">
+        <!-- Logo will be injected by JS from localStorage or show default -->
+        <span id="logo-emoji" style="font-size:20px">🏎</span>
+      </div>
       <div class="topbar-title-block">
         <h1>F1-Trade Journal</h1>
         <div class="subtitle" id="last-updated">Pull to refresh</div>
@@ -490,6 +527,22 @@
     </div>
   </div>
   <button class="save-btn" onclick="saveSettings()">Save &amp; Connect</button>
+
+  <div class="section-title" style="margin-top:24px;">App Logo</div>
+  <div class="settings-card">
+    <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:12px;">
+      <div><div class="s-label">Custom Logo</div><div class="s-sub">Upload your F1-Trade logo image</div></div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="logo-preview-box" style="width:60px;height:60px;border-radius:10px;background:#1a1a1a;border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:28px;">🏎</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="review-add-btn" style="padding:8px 16px;font-size:13px;" onclick="document.getElementById('logo-file-input').click()">📁 Choose Logo Image</button>
+          <button class="review-add-btn" style="padding:8px 16px;font-size:13px;color:var(--red);border-color:rgba(248,81,73,0.3);background:rgba(248,81,73,0.1);" onclick="clearLogo()">✕ Remove Logo</button>
+        </div>
+        <input type="file" id="logo-file-input" accept="image/*" style="display:none" onchange="onLogoSelected(event)">
+      </div>
+    </div>
+  </div>
+
   <div class="section-title" style="margin-top:24px;">Storage Info</div>
   <div class="settings-card">
     <div class="settings-row"><div><div class="s-label">Screenshot Storage</div><div class="s-sub" id="storage-info">Calculating...</div></div><button class="refresh-btn" onclick="calcStorage()" style="flex-shrink:0">Check</button></div>
@@ -498,7 +551,7 @@
   <div class="section-title" style="margin-top:24px;">About</div>
   <div class="settings-card">
     <div class="settings-row"><div><div class="s-label">F1-Trade Journal</div><div class="s-sub">Auto-synced from MetaTrader 5 via EA</div></div></div>
-    <div class="settings-row"><div><div class="s-label">Version</div><div class="s-sub">4.1.0 — Local-first screenshot storage</div></div></div>
+    <div class="settings-row"><div><div class="s-label">Version</div><div class="s-sub">4.2.0 — Fullscreen previews · Recent-first trades · Logo upload</div></div></div>
   </div>
 </div>
 
@@ -563,6 +616,13 @@
   </div>
 </div>
 
+<!-- Fullscreen Lightbox -->
+<div class="lightbox-overlay" id="lightbox-overlay" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img class="lightbox-img" id="lightbox-img" src="" alt="Screenshot fullscreen">
+  <div class="lightbox-hint">Tap anywhere to close</div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -594,16 +654,62 @@ let reviewCompKB    = 0;
 let reviewsCache = {};
 try {
   reviewsCache = JSON.parse(localStorage.getItem("tj_reviews") || "{}");
-} catch(e) {
-  reviewsCache = {};
-}
+} catch(e) { reviewsCache = {}; }
 
 const STAR_LABELS = ["","Terrible","Poor","Average","Good","Excellent"];
+
+// ═══════════════════════════════════════════
+//  LOGO HANDLING
+// ═══════════════════════════════════════════
+function loadLogoFromStorage() {
+  const saved = localStorage.getItem("tj_logo_b64");
+  if (saved) {
+    applyLogoToUI(saved);
+  }
+}
+
+function applyLogoToUI(dataUrl) {
+  // Topbar logo
+  const wrap = document.getElementById("topbar-logo-wrap");
+  if (wrap) {
+    wrap.innerHTML = `<img src="${dataUrl}" alt="Logo" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+  }
+  // Settings preview
+  const preview = document.getElementById("logo-preview-box");
+  if (preview) {
+    preview.innerHTML = `<img src="${dataUrl}" alt="Logo" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">`;
+  }
+}
+
+function onLogoSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  compressImage(file, 0.85, 200).then(({b64, mime}) => {
+    const dataUrl = "data:" + mime + ";base64," + b64;
+    try {
+      localStorage.setItem("tj_logo_b64", dataUrl);
+      applyLogoToUI(dataUrl);
+      showToast("Logo saved ✅");
+    } catch(e) {
+      showToast("Logo too large for storage");
+    }
+  });
+}
+
+function clearLogo() {
+  localStorage.removeItem("tj_logo_b64");
+  const wrap = document.getElementById("topbar-logo-wrap");
+  if (wrap) wrap.innerHTML = `<span id="logo-emoji" style="font-size:20px">🏎</span>`;
+  const preview = document.getElementById("logo-preview-box");
+  if (preview) preview.innerHTML = `<span style="font-size:28px">🏎</span>`;
+  showToast("Logo removed");
+}
 
 // ═══════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════
 window.addEventListener("DOMContentLoaded", () => {
+  loadLogoFromStorage();
   calcStorage();
   const saved = localStorage.getItem("tj_api_url");
   if (saved) {
@@ -626,6 +732,7 @@ function showPage(name) {
   currentPage = name;
   if (name === "calendar") renderCalendar();
   if (name === "accounts") renderAccountsPage();
+  if (name === "trades")   renderTrades();   // FIX: always render trades when tab opened
 }
 
 function saveSettings() {
@@ -665,9 +772,7 @@ function clearScreenshotCache() {
     showToast("Screenshots cleared");
     calcStorage();
     renderCurrentPage();
-  } catch(e) {
-    showToast("Error: " + e.message);
-  }
+  } catch(e) { showToast("Error: " + e.message); }
 }
 
 // ═══════════════════════════════════════════
@@ -718,7 +823,22 @@ function updateAccountSelector() {
 }
 
 function onAccountChange() { selectedAccount = document.getElementById("account-select").value; renderCurrentPage(); }
-function filteredTrades()  { return selectedAccount === "__all__" ? allTrades : allTrades.filter(t => String(t["Account ID"]||"Unknown") === selectedAccount); }
+
+// FIX: Sort trades newest-first by close/open time
+function filteredTrades() {
+  let trades = selectedAccount === "__all__" ? allTrades : allTrades.filter(t => String(t["Account ID"]||"Unknown") === selectedAccount);
+  // Sort: most recent close time first
+  trades = [...trades].sort((a, b) => {
+    const getTime = t => {
+      const raw = t["Close Time"] || t["Open Time"] || "";
+      if (!raw) return 0;
+      return new Date(raw.replace(/\./g,'-').replace(' ','T')).getTime() || 0;
+    };
+    return getTime(b) - getTime(a);
+  });
+  return trades;
+}
+
 function renderCurrentPage() {
   if (currentPage === "dashboard") renderDashboard();
   if (currentPage === "trades")    renderTrades();
@@ -824,45 +944,59 @@ function durCategory(dur) {
 }
 
 // ═══════════════════════════════════════════
-//  TRADES LIST
+//  TRADES LIST  — FIX: "All" tab now renders properly
 // ═══════════════════════════════════════════
 function setFilter(f, el) {
-  activeFilter=f;
-  document.querySelectorAll(".filter-pill").forEach(p=>p.classList.remove("active"));
-  el.classList.add("active"); renderTrades();
+  activeFilter = f;
+  document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+  el.classList.add("active");
+  renderTrades();
 }
 
 function renderTrades() {
-  let trades=filteredTrades();
-  if(activeFilter==="win")      trades=trades.filter(t=>t["Result"]==="WIN");
-  if(activeFilter==="loss")     trades=trades.filter(t=>t["Result"]==="LOSS");
-  if(activeFilter==="buy")      trades=trades.filter(t=>(t["Direction"]||"").toLowerCase()==="buy");
-  if(activeFilter==="sell")     trades=trades.filter(t=>(t["Direction"]||"").toLowerCase()==="sell");
-  if(activeFilter==="reviewed") trades=trades.filter(t=>reviewsCache[tradeKey(t)]);
+  // Always start from filteredTrades() which is already sorted newest-first
+  let trades = filteredTrades();
 
-  if(!trades.length){document.getElementById("trades-content").innerHTML='<div class="empty"><div class="icon">🔍</div><p>No trades match this filter.</p></div>';return;}
+  // Apply filter AFTER getting the base set
+  if (activeFilter === "win")      trades = trades.filter(t => t["Result"] === "WIN");
+  if (activeFilter === "loss")     trades = trades.filter(t => t["Result"] === "LOSS");
+  if (activeFilter === "buy")      trades = trades.filter(t => (t["Direction"]||"").toLowerCase() === "buy");
+  if (activeFilter === "sell")     trades = trades.filter(t => (t["Direction"]||"").toLowerCase() === "sell");
+  if (activeFilter === "reviewed") trades = trades.filter(t => reviewsCache[tradeKey(t)]);
 
-  const showAcct=selectedAccount==="__all__";
-  const html=trades.map(t=>{
-    const isWin=t["Result"]==="WIN",isLong=(t["Direction"]||"").toLowerCase()==="buy";
-    const net=parseFloat(t["Net P&L"]||0),pct=parseFloat(t["P&L %"]||0),rr=parseFloat(t["R:R"]||0);
-    const dur=parseDuration(t),cat=durCategory(dur);
-    const key=tradeKey(t),rev=reviewsCache[key];
-    const acctBadge=showAcct?`<span class="trade-acct-badge">${esc(t["Account Tag"]||t["Account ID"]||"")}</span>`:"";
-    const durBadge=dur?`<div class="dur-badge" style="border-color:${cat?.color||'#58a6ff'}44;color:${cat?.color||'#58a6ff'};background:${cat?.color||'#58a6ff'}15;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${esc(dur)}${cat?` · ${cat.label}`:""}</div>`:"";
+  if (!trades.length) {
+    document.getElementById("trades-content").innerHTML = '<div class="empty"><div class="icon">🔍</div><p>No trades match this filter.</p></div>';
+    return;
+  }
+
+  const showAcct = selectedAccount === "__all__";
+  const html = trades.map(t => {
+    const isWin  = t["Result"] === "WIN";
+    const isLong = (t["Direction"]||"").toLowerCase() === "buy";
+    const net    = parseFloat(t["Net P&L"]||0);
+    const pct    = parseFloat(t["P&L %"]||0);
+    const rr     = parseFloat(t["R:R"]||0);
+    const dur    = parseDuration(t);
+    const cat    = durCategory(dur);
+    const key    = tradeKey(t);
+    const rev    = reviewsCache[key];
+    const acctBadge = showAcct ? `<span class="trade-acct-badge">${esc(t["Account Tag"]||t["Account ID"]||"")}</span>` : "";
+    const durBadge  = dur ? `<div class="dur-badge" style="border-color:${cat?.color||'#58a6ff'}44;color:${cat?.color||'#58a6ff'};background:${cat?.color||'#58a6ff'}15;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${esc(dur)}${cat?` · ${cat.label}`:""}</div>` : "";
 
     let reviewStrip;
-    if(rev) {
-      const stars="★".repeat(rev.star)+"☆".repeat(5-rev.star);
-      const isLocal=rev.screenshotUrl&&rev.screenshotUrl.startsWith("data:");
-      const thumb=rev.screenshotUrl?`<img class="review-thumb-tiny" src="${rev.screenshotUrl}" onerror="this.style.display='none'">`:"";
-      const localBadge=isLocal?`<span class="local-badge">📱 local</span>`:"";
-      reviewStrip=`<div class="review-strip">${thumb}<span class="review-stars-small" style="color:#f0883e">${stars}</span><span class="review-thought-preview">${esc(rev.thought||"")}</span>${localBadge}<button class="review-add-btn" onclick="event.stopPropagation();openReview(${JSON.stringify(esc(key))})">Edit ✏️</button></div>`;
+    if (rev) {
+      const stars = "★".repeat(rev.star) + "☆".repeat(5-rev.star);
+      const isLocal = rev.screenshotUrl && rev.screenshotUrl.startsWith("data:");
+      const thumb   = rev.screenshotUrl
+        ? `<img class="review-thumb-tiny" src="${rev.screenshotUrl}" onclick="event.stopPropagation();openLightbox(${JSON.stringify(rev.screenshotUrl)})" title="Click to view full size" onerror="this.style.display='none'">`
+        : "";
+      const localBadge = isLocal ? `<span class="local-badge">📱 local</span>` : "";
+      reviewStrip = `<div class="review-strip">${thumb}<span class="review-stars-small" style="color:#f0883e">${stars}</span><span class="review-thought-preview">${esc(rev.thought||"")}</span>${localBadge}<button class="review-add-btn" onclick="event.stopPropagation();openReview(${JSON.stringify(esc(key))})">Edit ✏️</button></div>`;
     } else {
-      reviewStrip=`<div class="review-strip"><button class="review-add-btn" onclick="event.stopPropagation();openReview(${JSON.stringify(esc(key))})">+ Add Review</button></div>`;
+      reviewStrip = `<div class="review-strip"><button class="review-add-btn" onclick="event.stopPropagation();openReview(${JSON.stringify(esc(key))})">+ Add Review</button></div>`;
     }
 
-    return`<div class="trade-card ${isWin?'win':'loss'}" onclick="openReview('${esc(key)}')">
+    return `<div class="trade-card ${isWin?'win':'loss'}" onclick="openReview('${esc(key)}')">
       <div class="trade-header">
         <div><div class="trade-symbol">${esc(t["Symbol"]||"—")}</div><div class="trade-dir ${isLong?'buy':'sell'}">${isLong?'▲ Buy':'▼ Sell'}</div>${acctBadge}</div>
         <div class="trade-pnl"><div class="amount" style="color:${isWin?'var(--green)':'var(--red)'}">${net>=0?'+':''}$${Math.round(net*100)/100}</div><div class="pct">${pct>=0?'+':''}${Math.round(pct*100)/100}%</div></div>
@@ -877,10 +1011,27 @@ function renderTrades() {
       ${reviewStrip}
     </div>`;
   }).join("");
-  document.getElementById("trades-content").innerHTML=html;
+
+  document.getElementById("trades-content").innerHTML = html;
 }
 
 function tradeKey(t) { return String(t["Ticket"]||t["ticket"]||JSON.stringify(t).slice(0,40)); }
+
+// ═══════════════════════════════════════════
+//  FULLSCREEN LIGHTBOX
+// ═══════════════════════════════════════════
+function openLightbox(src) {
+  const overlay = document.getElementById("lightbox-overlay");
+  const img     = document.getElementById("lightbox-img");
+  img.src = src;
+  overlay.classList.add("show");
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+  document.getElementById("lightbox-overlay").classList.remove("show");
+  document.body.style.overflow = "";
+}
 
 // ═══════════════════════════════════════════
 //  TRADE REVIEW MODAL
@@ -889,7 +1040,6 @@ function openReview(key) {
   const t = allTrades.find(t => tradeKey(t) === key);
   if (!t) return;
 
-  // ── Always fully reset state first ──
   reviewTrade     = t;
   reviewStar      = 0;
   reviewImageB64  = null;
@@ -900,14 +1050,13 @@ function openReview(key) {
   const rev = reviewsCache[key] || {};
   reviewStar = rev.star || 0;
 
-  // Build trade header
-  const isWin  = t["Result"]==="WIN";
-  const isLong = (t["Direction"]||"").toLowerCase()==="buy";
+  const isWin  = t["Result"] === "WIN";
+  const isLong = (t["Direction"]||"").toLowerCase() === "buy";
   const net    = parseFloat(t["Net P&L"]||0);
   const rr     = parseFloat(t["R:R"]||0);
   const dur    = parseDuration(t);
 
-  document.getElementById("review-trade-header").innerHTML=`
+  document.getElementById("review-trade-header").innerHTML = `
     <div class="review-symbol-row">
       <span class="review-symbol">${esc(t["Symbol"]||"—")}</span>
       <span class="review-dir-pill ${isLong?'buy':'sell'}">${isLong?'▲ Buy':'▼ Sell'}</span>
@@ -929,16 +1078,15 @@ function openReview(key) {
   renderStars(reviewStar);
   resetScreenshotUI();
 
-  // Restore existing screenshot
   if (rev.screenshotUrl) {
     showScreenshotPreview(rev.screenshotUrl, null, 0, 0);
   }
 
   document.getElementById("thoughts-input").value = rev.thought || "";
 
-  const prog = document.getElementById("upload-progress");
-  if (prog) prog.style.display = "none";
+  const prog    = document.getElementById("upload-progress");
   const progBar = document.getElementById("upload-progress-bar");
+  if (prog)    prog.style.display = "none";
   if (progBar) progBar.style.width = "0%";
   const btn = document.getElementById("complete-review-btn");
   if (btn) { btn.disabled = false; btn.textContent = "Complete Review"; }
@@ -967,7 +1115,7 @@ function resetScreenshotUI() {
       <input type="file" id="screenshot-file-input" accept="image/*" onchange="onFileSelected(event)">
       <div class="upload-icon">📸</div>
       <div class="upload-label">Tap to upload screenshot</div>
-      <div class="upload-sub">JPEG · PNG · WEBP — auto-compressed</div>
+      <div class="upload-sub">JPEG · PNG · WEBP — auto-compressed · tap preview to fullscreen</div>
     </div>`;
 }
 
@@ -1013,10 +1161,12 @@ function compressImage(file, quality, maxW) {
 function showScreenshotPreview(src, filename, origKB, compKB) {
   const compInfo = compKB > 0 ? `Compressed: ${origKB}KB → ${compKB}KB` : "";
   const isLocal  = src.startsWith("data:");
+  const srcEscaped = src.replace(/'/g, "\\'");
   document.getElementById("screenshot-container").innerHTML = `
     <div class="screenshot-preview-wrap">
-      <img class="screenshot-preview-img" src="${src}" alt="screenshot">
+      <img class="screenshot-preview-img" src="${src}" alt="screenshot" onclick="openLightbox('${srcEscaped}')" title="Tap to view fullscreen">
       <div class="screenshot-preview-actions">
+        <button class="ss-action-btn" onclick="openLightbox('${srcEscaped}')">🔍 Full</button>
         <button class="ss-action-btn" onclick="document.getElementById('screenshot-file-input').click()">Change</button>
         <button class="ss-action-btn" style="color:var(--red)" onclick="clearScreenshot()">Remove</button>
       </div>
@@ -1049,7 +1199,6 @@ async function submitReview() {
 
   const key = tradeKey(reviewTrade);
 
-  // ── Step 1: Use local base64 immediately (no CORS, no network needed) ──
   let screenshotUrl = reviewsCache[key]?.screenshotUrl || null;
   if (reviewImageB64) {
     screenshotUrl = "data:" + reviewImageMime + ";base64," + reviewImageB64;
@@ -1057,47 +1206,36 @@ async function submitReview() {
 
   if (progBar) progBar.style.width = "40%";
 
-  // ── Step 2: Optionally try pushing to Google Drive in background ──
   if (reviewImageB64 && API_URL) {
     try {
       const resp = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action:    "uploadScreenshot",
-          ticket:    key,
-          imageB64:  reviewImageB64,
-          imageMime: reviewImageMime,
-          symbol:    reviewTrade["Symbol"] || "TRADE",
-          closeTime: reviewTrade["Close Time"] || ""
+          action: "uploadScreenshot", ticket: key,
+          imageB64: reviewImageB64, imageMime: reviewImageMime,
+          symbol: reviewTrade["Symbol"]||"TRADE", closeTime: reviewTrade["Close Time"]||""
         })
       });
       const json = await resp.json();
-      // If Drive upload succeeded, upgrade to permanent URL
       if (json.status === "ok" && json.url) {
         screenshotUrl = json.url;
         showToast("📁 Saved to Google Drive");
       }
     } catch (err) {
-      // Drive failed — silently fall back to local. User still gets their review saved.
       console.warn("Drive upload skipped:", err.message);
     }
   }
 
   if (progBar) progBar.style.width = "70%";
 
-  // ── Step 3: Save review text to Apps Script sheet (optional) ──
   if (API_URL && (reviewStar > 0 || thought)) {
     try {
       await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action:        "saveReview",
-          ticket:        key,
-          star:          reviewStar,
-          thought:       thought,
-          // Only send a real URL to the sheet — not a multi-MB base64 string
+          action: "saveReview", ticket: key, star: reviewStar, thought,
           screenshotUrl: (screenshotUrl && !screenshotUrl.startsWith("data:")) ? screenshotUrl : ""
         })
       });
@@ -1106,17 +1244,11 @@ async function submitReview() {
 
   if (progBar) progBar.style.width = "90%";
 
-  // ── Step 4: Always persist locally — this is the guaranteed save ──
-  reviewsCache[key] = {
-    star:          reviewStar,
-    thought:       thought,
-    screenshotUrl: screenshotUrl   // data: URL or Drive URL
-  };
+  reviewsCache[key] = { star: reviewStar, thought, screenshotUrl };
 
   try {
     localStorage.setItem("tj_reviews", JSON.stringify(reviewsCache));
   } catch (storageErr) {
-    // localStorage quota exceeded — drop the image but keep star & thought
     console.warn("localStorage full, dropping screenshot:", storageErr);
     reviewsCache[key].screenshotUrl = null;
     try {
@@ -1145,33 +1277,34 @@ async function submitReview() {
 //  ACCOUNTS PAGE
 // ═══════════════════════════════════════════
 function renderAccountsPage() {
-  const accounts=getAccounts(), el=document.getElementById("accounts-content");
-  if(!accounts.length){el.innerHTML='<div class="empty"><div class="icon">🔌</div><p>No accounts connected yet.</p></div>';return;}
-  const html=accounts.map(a=>{
-    const acctTrades=allTrades.filter(t=>String(t["Account ID"]||"Unknown")===a.id);
-    const s=computeStats(acctTrades)||{totalTrades:0,winRate:0,totalNet:0};
-    const balance=acctTrades.reduce((sum,t)=>sum+parseFloat(t["Net P&L"]||0),0);
-    const balRound=Math.round(balance*100)/100;
-    return`<div class="acct-card"><div class="acct-card-header"><div class="acct-card-dot"></div><div class="acct-card-tag">${esc(a.tag)}</div><div class="acct-card-id">ID: ${esc(a.id)}</div></div><div style="font-size:11px;color:var(--muted);margin-bottom:10px;">${esc(a.name)} &bull; ${esc(a.server)} &bull; ${esc(a.currency)}</div><div class="balance-strip"><span class="bs-label">Running P&amp;L Balance</span><span class="bs-val" style="color:${balance>=0?'var(--green)':'var(--red)'}">${balance>=0?'+':''}$${balRound}</span></div><div class="acct-stats" onclick="selectAccount('${a.id}')" style="cursor:pointer;margin-bottom:12px;"><div class="acct-stat"><div class="as-label">Net P&amp;L</div><div class="as-val" style="color:${s.totalNet>=0?'var(--green)':'var(--red)'}">${s.totalNet>=0?'+':''}$${s.totalNet}</div></div><div class="acct-stat"><div class="as-label">Win Rate</div><div class="as-val" style="color:${s.winRate>=50?'var(--green)':'var(--red)'}">${s.winRate}%</div></div><div class="acct-stat"><div class="as-label">Trades</div><div class="as-val" style="color:var(--blue)">${s.totalTrades}</div></div></div><button class="delete-btn" onclick="deleteAccount('${a.id}','${esc(a.tag)}')">🗑 Delete Account &amp; All Trades</button></div>`;
+  const accounts = getAccounts(), el = document.getElementById("accounts-content");
+  if (!accounts.length) { el.innerHTML='<div class="empty"><div class="icon">🔌</div><p>No accounts connected yet.</p></div>'; return; }
+  const html = accounts.map(a => {
+    const acctTrades = allTrades.filter(t => String(t["Account ID"]||"Unknown") === a.id);
+    const s = computeStats(acctTrades) || {totalTrades:0,winRate:0,totalNet:0};
+    const balance = acctTrades.reduce((sum,t)=>sum+parseFloat(t["Net P&L"]||0),0);
+    const balRound = Math.round(balance*100)/100;
+    return `<div class="acct-card"><div class="acct-card-header"><div class="acct-card-dot"></div><div class="acct-card-tag">${esc(a.tag)}</div><div class="acct-card-id">ID: ${esc(a.id)}</div></div><div style="font-size:11px;color:var(--muted);margin-bottom:10px;">${esc(a.name)} &bull; ${esc(a.server)} &bull; ${esc(a.currency)}</div><div class="balance-strip"><span class="bs-label">Running P&amp;L Balance</span><span class="bs-val" style="color:${balance>=0?'var(--green)':'var(--red)'}">${balance>=0?'+':''}$${balRound}</span></div><div class="acct-stats" onclick="selectAccount('${a.id}')" style="cursor:pointer;margin-bottom:12px;"><div class="acct-stat"><div class="as-label">Net P&amp;L</div><div class="as-val" style="color:${s.totalNet>=0?'var(--green)':'var(--red)'}">${s.totalNet>=0?'+':''}$${s.totalNet}</div></div><div class="acct-stat"><div class="as-label">Win Rate</div><div class="as-val" style="color:${s.winRate>=50?'var(--green)':'var(--red)'}">${s.winRate}%</div></div><div class="acct-stat"><div class="as-label">Trades</div><div class="as-val" style="color:var(--blue)">${s.totalTrades}</div></div></div><button class="delete-btn" onclick="deleteAccount('${a.id}','${esc(a.tag)}')">🗑 Delete Account &amp; All Trades</button></div>`;
   }).join("");
-  el.innerHTML=`<div class="section-title">${accounts.length} Account${accounts.length!==1?'s':''} Connected</div>${html}`;
+  el.innerHTML = `<div class="section-title">${accounts.length} Account${accounts.length!==1?'s':''} Connected</div>${html}`;
 }
-function selectAccount(id){selectedAccount=id;document.getElementById("account-select").value=id;showPage("dashboard");}
+
+function selectAccount(id) { selectedAccount=id; document.getElementById("account-select").value=id; showPage("dashboard"); }
 
 async function deleteAccount(id, tag) {
-  if(!confirm(`Delete ALL trades for account "${tag}" (ID: ${id})?\n\nThis cannot be undone.`))return;
+  if (!confirm(`Delete ALL trades for account "${tag}" (ID: ${id})?\n\nThis cannot be undone.`)) return;
   showToast("Deleting...");
-  try{
-    const res=await fetch(API_URL+"?action=deleteAccount&accountId="+encodeURIComponent(id),{cache:"no-store"});
-    const json=await res.json();
-    if(json.status==="ok"){
+  try {
+    const res  = await fetch(API_URL+"?action=deleteAccount&accountId="+encodeURIComponent(id),{cache:"no-store"});
+    const json = await res.json();
+    if (json.status === "ok") {
       showToast(`Deleted ${json.deleted} trades for ${tag}`);
-      allTrades=allTrades.filter(t=>String(t["Account ID"]||"Unknown")!==String(id));
+      allTrades = allTrades.filter(t => String(t["Account ID"]||"Unknown") !== String(id));
       updateAccountSelector();
-      if(selectedAccount===id){selectedAccount="__all__";document.getElementById("account-select").value="__all__";}
+      if (selectedAccount === id) { selectedAccount="__all__"; document.getElementById("account-select").value="__all__"; }
       renderAccountsPage();
     } else showToast("Error: "+json.message);
-  }catch(err){showToast("Delete failed: "+err.message);}
+  } catch(err) { showToast("Delete failed: "+err.message); }
 }
 
 // ═══════════════════════════════════════════
