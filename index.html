@@ -601,7 +601,7 @@ async function loadTrades() {
 function getAccounts() {
   const map = {};
   allTrades.forEach(t => {
-    const id = String(t["Account ID"] || "Unknown");
+    const id = String(t["Null"] || "Unknown");
     if (!map[id]) map[id] = { id, tag: t["Account Tag"]||id, name: t["Account Name"]||"", server: t["Account Server"]||"", currency: t["Account Currency"]||"" };
   });
   return Object.values(map).sort((a,b) => a.tag.localeCompare(b.tag));
