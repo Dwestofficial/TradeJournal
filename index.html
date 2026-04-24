@@ -431,6 +431,14 @@
     width: 0%; transition: width 0.3s;
   }
 
+  /* Upload error banner */
+  .upload-error-banner {
+    background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.4);
+    border-radius: 10px; padding: 10px 14px; font-size: 12px;
+    color: var(--red); margin-top: 10px; display: none;
+  }
+  .upload-error-banner.show { display: block; }
+
   /* ── Toast ── */
   .toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
@@ -524,7 +532,11 @@
   <div class="section-title" style="margin-top:24px;">About</div>
   <div class="settings-card">
     <div class="settings-row"><div><div class="s-label">F1-Trade Journal</div><div class="s-sub">Auto-synced from MetaTrader 5 via EA</div></div></div>
-    <div class="settings-row"><div><div class="s-label">Version</div><div class="s-sub">4.0.0 — Trade Review + Screenshot Upload</div></div></div>
+    <div class="settings-row"><div><div class="s-label">Version</div><div class="s-sub">4.0.1 — Screenshot Upload Bug Fixed</div></div></div>
+  </div>
+  <div class="section-title" style="margin-top:24px;">Screenshot Upload Requirements</div>
+  <div class="settings-card">
+    <div class="settings-row"><div><div class="s-label">⚠️ Apps Script Deployment</div><div class="s-sub">Your web app MUST be deployed with:<br><br><strong>Execute as: Me (your Google account)</strong><br><strong>Who has access: Anyone</strong><br><br>Without this, screenshot uploads to Google Drive will fail silently.</div></div></div>
   </div>
 </div>
 
@@ -596,6 +608,8 @@
           <div class="upload-sub">JPEG · PNG · WEBP — auto-compressed before upload</div>
         </div>
       </div>
+      <!-- FIX: Upload error message shown when Drive upload fails -->
+      <div class="upload-error-banner" id="upload-error-banner"></div>
 
       <!-- Thoughts -->
       <div class="review-section-label">Capture your thoughts</div>
@@ -931,26 +945,28 @@ function openReview(key) {
   // Reset stars
   renderStars(reviewStar);
 
-  // Reset screenshot
-  document.getElementById("screenshot-container").innerHTML=`
-    <div class="screenshot-upload-area" id="upload-area" onclick="document.getElementById('screenshot-file-input').click()">
-      <input type="file" id="screenshot-file-input" accept="image/*" onchange="onFileSelected(event)">
-      <div class="upload-icon">📸</div>
-      <div class="upload-label">Tap to upload screenshot</div>
-      <div class="upload-sub">JPEG · PNG · WEBP — auto-compressed before upload</div>
-    </div>`;
+  // Reset screenshot area
+  resetScreenshotArea();
 
   // Restore existing screenshot if any
-  if(rev.screenshotUrl) {
-    showScreenshotPreview(rev.screenshotUrl, null, 0, 0);
+  // FIX: Also restore the locally cached base64 so re-saving works without re-uploading
+  if(rev.screenshotB64) {
+    reviewImageB64  = rev.screenshotB64;
+    reviewImageMime = rev.screenshotMime || "image/jpeg";
+    const dataUrl   = "data:" + reviewImageMime + ";base64," + reviewImageB64;
+    showScreenshotPreview(dataUrl, null, 0, 0, true);
+  } else if(rev.screenshotUrl) {
+    // Only URL available (uploaded before, no local b64) — show preview from URL
+    showScreenshotPreview(rev.screenshotUrl, null, 0, 0, true);
   }
 
   // Thoughts
   document.getElementById("thoughts-input").value = rev.thought || "";
 
-  // Progress
+  // Reset progress + error
   const prog=document.getElementById("upload-progress");
   if(prog){prog.style.display="none";}
+  hideUploadError();
   const btn=document.getElementById("complete-review-btn");
   if(btn){btn.disabled=false;btn.textContent="Complete Review";}
 
@@ -979,12 +995,13 @@ function onFileSelected(event) {
   const file = event.target.files[0];
   if(!file) return;
   reviewOrigKB = Math.round(file.size/1024);
+  hideUploadError();
   compressImage(file, 0.55, 1280).then(({b64, mime, kb}) => {
     reviewImageB64  = b64;
     reviewImageMime = mime;
     reviewCompKB    = kb;
     const dataUrl = "data:"+mime+";base64,"+b64;
-    showScreenshotPreview(dataUrl, file.name, reviewOrigKB, kb);
+    showScreenshotPreview(dataUrl, file.name, reviewOrigKB, kb, false);
   });
 }
 
@@ -1011,22 +1028,28 @@ function compressImage(file, quality, maxW) {
   });
 }
 
-function showScreenshotPreview(src, filename, origKB, compKB) {
-  const compInfo = compKB>0 ? `Compressed: ${origKB}KB → ${compKB}KB` : "";
+// FIX: Added `isExisting` param — don't show compress badge for already-saved screenshots
+function showScreenshotPreview(src, filename, origKB, compKB, isExisting) {
+  const compInfo = (!isExisting && compKB>0) ? `Compressed: ${origKB}KB → ${compKB}KB` : "";
   document.getElementById("screenshot-container").innerHTML=`
     <div class="screenshot-preview-wrap">
-      <img class="screenshot-preview-img" src="${src}" alt="screenshot">
+      <img class="screenshot-preview-img" src="${src}" alt="screenshot" onerror="this.src='';this.style.display='none'">
       <div class="screenshot-preview-actions">
-        <button class="ss-action-btn" onclick="document.getElementById('screenshot-file-input').click()">Change</button>
+        <button class="ss-action-btn" onclick="triggerNewScreenshot()">Change</button>
         <button class="ss-action-btn" style="color:var(--red)" onclick="clearScreenshot()">Remove</button>
       </div>
-      ${compKB>0?`<div class="compress-badge">✅ ${compInfo}</div>`:''}
+      ${compInfo?`<div class="compress-badge">✅ ${compInfo}</div>`:''}
     </div>
     <input type="file" id="screenshot-file-input" accept="image/*" onchange="onFileSelected(event)" style="display:none">`;
 }
 
-function clearScreenshot() {
-  reviewImageB64=null; reviewOrigKB=0; reviewCompKB=0;
+// FIX: Separate function to trigger file input after DOM rebuild
+function triggerNewScreenshot() {
+  const inp = document.getElementById("screenshot-file-input");
+  if(inp) inp.click();
+}
+
+function resetScreenshotArea() {
   document.getElementById("screenshot-container").innerHTML=`
     <div class="screenshot-upload-area" id="upload-area" onclick="document.getElementById('screenshot-file-input').click()">
       <input type="file" id="screenshot-file-input" accept="image/*" onchange="onFileSelected(event)">
@@ -1036,8 +1059,30 @@ function clearScreenshot() {
     </div>`;
 }
 
+function clearScreenshot() {
+  reviewImageB64=null; reviewOrigKB=0; reviewCompKB=0;
+  const key = tradeKey(reviewTrade);
+  // FIX: Also clear cached b64 so the old image isn't re-uploaded
+  if(reviewsCache[key]) {
+    delete reviewsCache[key].screenshotB64;
+    delete reviewsCache[key].screenshotMime;
+    delete reviewsCache[key].screenshotUrl;
+    localStorage.setItem("tj_reviews", JSON.stringify(reviewsCache));
+  }
+  resetScreenshotArea();
+}
+
+function showUploadError(msg) {
+  const el = document.getElementById("upload-error-banner");
+  if(el){ el.textContent = "⚠️ " + msg; el.classList.add("show"); }
+}
+function hideUploadError() {
+  const el = document.getElementById("upload-error-banner");
+  if(el){ el.classList.remove("show"); }
+}
+
 // ════════════════════════════════════════════════════════
-//  SUBMIT REVIEW
+//  SUBMIT REVIEW  — FIXED
 // ════════════════════════════════════════════════════════
 async function submitReview() {
   const thought = document.getElementById("thoughts-input").value.trim();
@@ -1046,13 +1091,15 @@ async function submitReview() {
   const progBar = document.getElementById("upload-progress-bar");
 
   btn.disabled=true; btn.textContent="Saving...";
+  hideUploadError();
   if(prog){prog.style.display="block";}
   if(progBar) progBar.style.width="20%";
 
   const key = tradeKey(reviewTrade);
+  // FIX: Start with whatever screenshotUrl is already in the cache
   let screenshotUrl = reviewsCache[key]?.screenshotUrl || null;
 
-  // Upload image to Drive via Apps Script if we have a new one
+  // Upload image to Drive via Apps Script only if a NEW image was selected
   if(reviewImageB64 && API_URL) {
     try {
       if(progBar) progBar.style.width="45%";
@@ -1068,20 +1115,28 @@ async function submitReview() {
           closeTime: reviewTrade["Close Time"] || ""
         })
       });
+      if(!resp.ok) throw new Error("HTTP " + resp.status);
       const json = await resp.json();
-      if(json.status==="ok" && json.url) screenshotUrl = json.url;
+      if(json.status==="ok" && json.url) {
+        screenshotUrl = json.url;
+      } else {
+        // FIX: Show the actual error from Apps Script instead of silently failing
+        const errMsg = json.message || "Unknown error from Apps Script";
+        showUploadError("Screenshot upload failed: " + errMsg + ". Check Apps Script deployment settings (Execute as: Me, Access: Anyone).");
+        // Don't abort — still save stars and thoughts
+      }
       if(progBar) progBar.style.width="75%";
     } catch(err) {
-      showToast("Screenshot upload failed: " + err.message);
+      showUploadError("Screenshot upload failed: " + err.message + ". Check your Apps Script URL and deployment.");
     }
   }
 
   if(progBar) progBar.style.width="90%";
 
-  // Save review to Apps Script (optional — also cache locally)
+  // Save review to Apps Script
   if(API_URL && (reviewStar>0 || thought || screenshotUrl)) {
     try {
-      await fetch(API_URL, {
+      const saveResp = await fetch(API_URL, {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
@@ -1092,11 +1147,24 @@ async function submitReview() {
           screenshotUrl: screenshotUrl || ""
         })
       });
-    } catch(_){}
+      if(!saveResp.ok) throw new Error("HTTP " + saveResp.status);
+      const saveJson = await saveResp.json();
+      if(saveJson.status !== "ok") throw new Error(saveJson.message || "Save failed");
+    } catch(err) {
+      showToast("Warning: Could not sync to Sheet: " + err.message);
+    }
   }
 
-  // Always persist locally
-  reviewsCache[key] = { star: reviewStar, thought, screenshotUrl };
+  // FIX: Always persist locally INCLUDING the b64 so editing works offline
+  // and re-opening the review shows the image without needing the Drive URL
+  reviewsCache[key] = {
+    star:          reviewStar,
+    thought:       thought,
+    screenshotUrl: screenshotUrl || reviewsCache[key]?.screenshotUrl || null,
+    // Store b64 locally for re-display (capped — only store if <500KB)
+    screenshotB64:  (reviewImageB64 && reviewCompKB < 500) ? reviewImageB64  : (reviewsCache[key]?.screenshotB64  || null),
+    screenshotMime: reviewImageB64 ? reviewImageMime : (reviewsCache[key]?.screenshotMime || "image/jpeg")
+  };
   localStorage.setItem("tj_reviews", JSON.stringify(reviewsCache));
 
   if(progBar) progBar.style.width="100%";
@@ -1173,7 +1241,6 @@ function openDaySheet(dk) {
   const totEl=document.getElementById("sheet-total");
   totEl.textContent=(net>=0?'+':'')+'$'+Math.round(net*100)/100;
   totEl.className="sheet-total "+(net>=0?"pos":"neg");
-  const showAcct=selectedAccount==="__all__";
   document.getElementById("sheet-trades").innerHTML=trades.map(t=>{
     const isWin=t["Result"]==="WIN",isLong=(t["Direction"]||"").toLowerCase()==="buy";
     const tNet=parseFloat(t["Net P&L"]||0);
