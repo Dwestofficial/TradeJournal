@@ -430,6 +430,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <div class="toast" id="toast"></div>
 
 <script>
+  function toggleUID(){
+  const el  = document.getElementById("uid-display");
+  const btn = document.getElementById("uid-toggle-btn");
+  const hidden = el.style.filter !== "none" && el.style.filter !== "";
+  el.style.filter   = hidden ? "none" : "blur(4px)";
+  el.style.userSelect = hidden ? "text" : "none";
+  btn.textContent   = hidden ? "🙈 Hide" : "👁 Show";
+}
 // ═══ CONFIGURATION ═══════════════════════════════════════
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZ_0G6RHJTBKfIc708I925ajTSVDRSJANyobKNSKjqafs-OvCT-UTOCTUIXJUGAwWt/exec";
 // ═════════════════════════════════════════════════════════
