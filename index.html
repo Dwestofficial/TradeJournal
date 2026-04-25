@@ -659,16 +659,34 @@ function showLogin() {
   document.getElementById("login-page").style.display = "flex";
 }
 
-function doLogin() {
+async function doLogin() {
   const url = document.getElementById("login-url-input").value.trim();
-  if (!url || !url.startsWith("https://")) { showToast("Please enter a valid HTTPS URL"); return; }
-  localStorage.setItem("tj_api_url", url);
+  if (!url || !url.startsWith("https://") || url.length < 50) {
+    showToast("Please enter a valid Apps Script URL"); return;
+  }
+  const btn = document.querySelector(".login-btn");
+  btn.textContent = "Connecting…"; btn.disabled = true;
+  
+  // Test the URL before committing
+  const prevURL = API_URL;
   API_URL = url;
+  await loadTrades();
+  
+  if (!allTrades.length) {
+    API_URL = prevURL;
+    btn.textContent = "Connect & Enter Dashboard →"; btn.disabled = false;
+    showToast("Could not load trades — check your URL"); return;
+  }
+  
+  localStorage.setItem("tj_api_url", url);
   document.getElementById("api-url-input").value = url;
+  btn.textContent = "Connect & Enter Dashboard →"; btn.disabled = false;
   showApp();
-  loadAll();
+  document.getElementById("last-updated").textContent = "Updated " + new Date().toLocaleTimeString();
+  updateServerBadge();
+  renderCurrentPage();
 }
-
+  
 function doLogout() {
   if (!confirm("Disconnect this device?\n\nYour trade data on Google Sheets is not affected.")) return;
   localStorage.removeItem("tj_api_url");
