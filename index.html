@@ -672,10 +672,10 @@ async function doLogin() {
   API_URL = url;
   await loadTrades();
   
-  if (!allTrades.length) {
+  if (!lastLoadOk) {
     API_URL = prevURL;
     btn.textContent = "Connect & Enter Dashboard →"; btn.disabled = false;
-    showToast("Could not load trades — check your URL"); return;
+    showToast("Could not connect — check your URL"); return;
   }
   
   localStorage.setItem("tj_api_url", url);
@@ -731,11 +731,13 @@ async function loadAll() {
   renderCurrentPage();
 }
 
+let lastLoadOk = false;
 async function loadTrades() {
+  lastLoadOk = false;
   try {
     const res  = await fetch(API_URL + "?action=getTrades", { cache: "no-store" });
     const json = await res.json();
-    if (json.status === "ok") allTrades = json.trades || [];
+    if (json.status === "ok") { allTrades = json.trades || []; lastLoadOk = true; }
     else throw new Error(json.message);
   } catch(e) { showToast("Failed to load: " + e.message); }
 }
