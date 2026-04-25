@@ -1,0 +1,8 @@
+{
+  "name": "F1-Trade Journal",
+  "short_name": "F1 Journal",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117"
+}
