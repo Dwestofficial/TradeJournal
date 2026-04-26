@@ -668,7 +668,7 @@ function renderDashboard() {
       <div class="stat-card"><div class="stat-label">Avg R:R</div><div class="stat-val ${s.avgRR>=1?'green':'yellow'}">${s.avgRR}R</div></div>
       <div class="stat-card"><div class="stat-label">Best Trade</div><div class="stat-val green">+$${s.bestTrade}</div></div>
       <div class="stat-card"><div class="stat-label">Worst Trade</div><div class="stat-val red">$${s.worstTrade}</div></div>
-      <div class="stat-card wide"><div class="stat-label">Expectancy <span style="font-size:10px;color:var(--muted);font-weight:400">(avg $ per trade)</span></div><div class="stat-val ${s.expectancy>=0?'green':'red'}">${s.expectancy>=0?'+':''}$${s.expectancy}</div></div>
+      <div class="stat-card"><div class="stat-label">Expectancy</div><div class="stat-val ${s.expectancy>=0?'green':'red'}">${s.expectancy>=0?'+':''}$${s.expectancy}</div></div>
     </div>
     ${renderAssets(allTrades)}`;
 }
