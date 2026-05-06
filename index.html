@@ -13,28 +13,38 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#070a09;
-  --surface:#0e1311;
-  --surface2:#131a17;
-  --surface3:#19211d;
-  --border:#1b2521;
-  --border2:#23302b;
-  --green:#00d4aa;
-  --green-dim:#00a87a;
-  --green-bg:rgba(0,212,170,0.06);
-  --green-border:rgba(0,212,170,0.15);
-  --red:#e05252;
-  --red-dim:#b83c3c;
-  --red-bg:rgba(224,82,82,0.06);
-  --red-border:rgba(224,82,82,0.15);
-  --blue:#4a9eff;
-  --yellow:#d4a017;
-  --purple:#9b6dff;
-  --text:#e8ede8;
-  --text2:#a8b8a8;
-  --muted:#6a7d6a;
+  --bg:#0a0d0c;
+  --surface:#101412;
+  --surface2:#141a17;
+  --surface3:#19201c;
+  --border:#1c2420;
+  --border2:#25302b;
+  --green:#22c39a;
+  --green-dim:#1a9d7c;
+  --green-soft:rgba(34,195,154,0.10);
+  --green-line:rgba(34,195,154,0.22);
+  --green-bg:rgba(34,195,154,0.07);
+  --green-border:rgba(34,195,154,0.16);
+  --red:#d96a6a;
+  --red-dim:#b85454;
+  --red-bg:rgba(217,106,106,0.07);
+  --red-border:rgba(217,106,106,0.16);
+  --blue:#5b9ee8;
+  --yellow:#c9a04a;
+  --purple:#9286d6;
+  --text:#e6ebe7;
+  --text2:#9aa9a1;
+  --muted:#6a7a72;
   --radius:10px;
   --radius-sm:7px;
+  /* chart theme tokens (overridden in light) */
+  --chart-line:#22c39a;
+  --chart-line-glow:rgba(34,195,154,0.45);
+  --chart-fill-top:rgba(34,195,154,0.32);
+  --chart-fill-bot:rgba(34,195,154,0.02);
+  --chart-grid:rgba(255,255,255,0.04);
+  --chart-zero:rgba(34,195,154,0.22);
+  --chart-axis:#7a8a82;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{
@@ -49,17 +59,31 @@ body{
   font-size:13px;
 }
 body.light-theme{
-  --bg:#f4f6f5;
+  --bg:#f5f7f6;
   --surface:#ffffff;
-  --surface2:#f7f9f8;
+  --surface2:#fafbfa;
   --surface3:#eef2f0;
-  --border:#e3e8e5;
+  --border:#e4e8e6;
   --border2:#d3dad6;
-  --text:#0e1311;
-  --text2:#3b4a44;
+  --text:#0f1614;
+  --text2:#3d4a45;
   --muted:#7a8a83;
-  --green-bg:rgba(0,168,122,0.08);
-  --green-border:rgba(0,168,122,0.22);
+  --green:#10996e;
+  --green-dim:#0e7d5a;
+  --green-soft:rgba(16,153,110,0.10);
+  --green-line:rgba(16,153,110,0.24);
+  --green-bg:rgba(16,153,110,0.08);
+  --green-border:rgba(16,153,110,0.22);
+  --red:#c64545;
+  --red-bg:rgba(198,69,69,0.08);
+  --red-border:rgba(198,69,69,0.22);
+  --chart-line:#10996e;
+  --chart-line-glow:rgba(16,153,110,0.30);
+  --chart-fill-top:rgba(16,153,110,0.18);
+  --chart-fill-bot:rgba(16,153,110,0.01);
+  --chart-grid:rgba(15,22,20,0.06);
+  --chart-zero:rgba(16,153,110,0.28);
+  --chart-axis:#6b7a73;
 }
 
 @media all and (display-mode: standalone){
@@ -214,11 +238,11 @@ body{padding-bottom:96px}
 .equity-card{
   position:relative;overflow:hidden;
   background:
-    radial-gradient(120% 100% at 100% 0%, rgba(0,212,170,0.10) 0%, transparent 55%),
-    linear-gradient(180deg, #0f1612 0%, #0b110c 100%);
-  border:1px solid rgba(0,212,170,0.18);
+    radial-gradient(120% 100% at 100% 0%, var(--green-soft) 0%, transparent 55%),
+    var(--surface);
+  border:1px solid var(--border);
   border-radius:18px;padding:18px 18px 14px;margin-bottom:14px;
-  box-shadow:0 8px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+  box-shadow:0 8px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.03);
 }
 .equity-head{display:flex;align-items:center;gap:9px;margin-bottom:2px}
 .equity-title{font-size:14px;font-weight:700;letter-spacing:-0.3px}
@@ -433,11 +457,11 @@ body{padding-bottom:96px}
 .monthly-chart-wrap{
   margin:18px 4px 8px;position:relative;overflow:hidden;
   background:
-    radial-gradient(120% 100% at 100% 0%, rgba(0,212,170,0.08) 0%, transparent 55%),
-    linear-gradient(180deg, #0f1612 0%, #0b110c 100%);
-  border:1px solid rgba(0,212,170,0.16);
+    radial-gradient(120% 100% at 100% 0%, var(--green-soft) 0%, transparent 55%),
+    var(--surface);
+  border:1px solid var(--border);
   border-radius:16px;padding:16px 14px 12px;
-  box-shadow:0 8px 24px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04);
+  box-shadow:0 8px 24px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.03);
 }
 .monthly-chart-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .monthly-chart-title{font-size:13px;font-weight:800;letter-spacing:-0.2px}
@@ -454,14 +478,15 @@ body{padding-bottom:96px}
 .monthly-stats .ms-sub{font-size:9px;color:var(--muted);margin-top:1px}
 .chart-tooltip{
   position:absolute;pointer-events:none;
-  background:rgba(10,15,12,0.92);backdrop-filter:blur(10px);
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
-  border:1px solid rgba(0,212,170,0.35);
+  border:1px solid var(--green-border);
   border-radius:8px;padding:6px 10px;
   font-size:11px;font-weight:700;color:var(--text);
   transform:translate(-50%,-115%);white-space:nowrap;
   opacity:0;transition:opacity 0.15s;z-index:5;
-  box-shadow:0 6px 20px rgba(0,0,0,0.5);
+  box-shadow:0 6px 20px rgba(0,0,0,0.18);
 }
 .chart-tooltip.show{opacity:1}
 .chart-tooltip .tt-month{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:1px}
@@ -1121,7 +1146,9 @@ function equityCardHTML(s,info,trades){
   const W=240,H=150;
   const path=smoothSvgPath(pts,W,H);
   const isPos=s.totalNet>=0;
-  const color=isPos?"#00d4aa":"#e05252";
+  const cs=getComputedStyle(document.body);
+  const themeLine=(cs.getPropertyValue('--chart-line')||'#22c39a').trim();
+  const color=isPos?themeLine:(cs.getPropertyValue('--red')||'#d96a6a').trim();
   const gid="eq_grad_"+Date.now();
   // 30d delta vs prior period
   const now=Date.now(), d30=30*86400000;
@@ -1139,11 +1166,7 @@ function equityCardHTML(s,info,trades){
   const lastPt = path.last||[W,H/2];
   return `
   <div class="equity-card">
-    <div class="equity-head">
-      <div class="equity-title">${esc(info["Account Server"]||"Account")}</div>
-      <span class="live-pill"><span class="lp-dot"></span>Live</span>
-    </div>
-    <div class="equity-sub">${esc(info["Account Name"]||"—")} · ${esc(info["Account Currency"]||"USD")}</div>
+    <div class="equity-label">Total Net P&amp;L</div>
     <div class="equity-label">Total Net P&amp;L</div>
     <div class="equity-val" style="color:${color}">${isPos?'+':''}$${Math.abs(s.totalNet).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
     <div>
@@ -1244,7 +1267,7 @@ function renderDashboard() {
     <div class="server-info-card" style="margin-bottom:12px">
       <div class="si-dot"></div>
       <div class="si-info"><div class="si-server">${esc(info["Account Server"]||"—")}</div></div>
-      <div class="si-badge">${esc(info["Account Name"]||"Account")}</div>
+      <span class="live-pill"><span class="lp-dot"></span>${/demo/i.test(info["Account Server"]||info["Account Name"]||"")?'Demo':'Live'}</span>
     </div>
 
     ${equityCardHTML(s,info,allTrades)}
@@ -1532,20 +1555,31 @@ function renderMonthlyChart(){
   canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+"px";canvas.style.height=H+"px";
   const ctx=canvas.getContext("2d");ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
 
+  // Theme-aware colors
+  const cs=getComputedStyle(document.body);
+  const cLine=(cs.getPropertyValue('--chart-line')||'#22c39a').trim();
+  const cGlow=(cs.getPropertyValue('--chart-line-glow')||'rgba(34,195,154,0.45)').trim();
+  const cFillTop=(cs.getPropertyValue('--chart-fill-top')||'rgba(34,195,154,0.32)').trim();
+  const cFillBot=(cs.getPropertyValue('--chart-fill-bot')||'rgba(34,195,154,0.02)').trim();
+  const cGrid=(cs.getPropertyValue('--chart-grid')||'rgba(255,255,255,0.04)').trim();
+  const cZero=(cs.getPropertyValue('--chart-zero')||'rgba(34,195,154,0.22)').trim();
+  const cAxis=(cs.getPropertyValue('--chart-axis')||'#7a8a82').trim();
+  const cRed=(cs.getPropertyValue('--red')||'#d96a6a').trim();
+
   const padL=42,padR=14,padT=24,padB=30,chartW=W-padL-padR,chartH=H-padT-padB;
   const maxV=Math.max(...monthly.map(Math.abs),1);
 
-  ctx.strokeStyle="rgba(255,255,255,0.04)";ctx.lineWidth=1;ctx.setLineDash([]);
+  ctx.strokeStyle=cGrid;ctx.lineWidth=1;ctx.setLineDash([]);
   for(let g=0;g<=4;g++){
     const y=padT+(g/4)*chartH;
     ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(padL+chartW,y);ctx.stroke();
   }
   const zeroY=padT+chartH/2;
-  ctx.strokeStyle="rgba(0,212,170,0.25)";ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.strokeStyle=cZero;ctx.lineWidth=1;ctx.setLineDash([4,4]);
   ctx.beginPath();ctx.moveTo(padL,zeroY);ctx.lineTo(padL+chartW,zeroY);ctx.stroke();
   ctx.setLineDash([]);
 
-  ctx.fillStyle="#6a7d6a";ctx.font="600 10px Inter,-apple-system,sans-serif";ctx.textAlign="right";
+  ctx.fillStyle=cAxis;ctx.font="600 10px Inter,-apple-system,sans-serif";ctx.textAlign="right";
   ctx.fillText(fmtK(maxV),padL-6,padT+4);
   ctx.fillText("0",padL-6,zeroY+3);
   ctx.fillText(fmtK(-maxV),padL-6,padT+chartH+3);
@@ -1566,23 +1600,23 @@ function renderMonthlyChart(){
   ctx.lineTo(pts[0].x,zeroY);
   ctx.closePath();
   const grad=ctx.createLinearGradient(0,padT,0,zeroY);
-  grad.addColorStop(0,"rgba(0,212,170,0.38)");
-  grad.addColorStop(1,"rgba(0,212,170,0.02)");
+  grad.addColorStop(0,cFillTop);
+  grad.addColorStop(1,cFillBot);
   ctx.fillStyle=grad;ctx.fill();
 
-  ctx.shadowColor="rgba(0,212,170,0.55)";ctx.shadowBlur=14;
+  ctx.shadowColor=cGlow;ctx.shadowBlur=14;
   smoothPath();
-  ctx.strokeStyle="#00d4aa";ctx.lineWidth=2.4;ctx.lineJoin="round";ctx.lineCap="round";
+  ctx.strokeStyle=cLine;ctx.lineWidth=2.4;ctx.lineJoin="round";ctx.lineCap="round";
   ctx.stroke();
   ctx.shadowBlur=0;
 
   pts.forEach((p,i)=>{
-    const v=p.v,color=v>=0?"#00d4aa":"#e05252";
+    const v=p.v,color=v>=0?cLine:cRed;
     ctx.beginPath();ctx.arc(p.x,p.y,5,0,2*Math.PI);
-    ctx.fillStyle=v>=0?"rgba(0,212,170,0.18)":"rgba(224,82,82,0.18)";ctx.fill();
+    ctx.fillStyle=v>=0?cFillTop:'rgba(217,106,106,0.18)';ctx.fill();
     ctx.beginPath();ctx.arc(p.x,p.y,2.8,0,2*Math.PI);
     ctx.fillStyle=color;ctx.fill();
-    ctx.fillStyle="#7a8d7a";ctx.font="600 10px Inter,-apple-system,sans-serif";ctx.textAlign="center";
+    ctx.fillStyle=cAxis;ctx.font="600 10px Inter,-apple-system,sans-serif";ctx.textAlign="center";
     ctx.fillText(MONTH_NAMES[i],p.x,H-padB+14);
   });
 
