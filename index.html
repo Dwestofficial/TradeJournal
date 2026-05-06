@@ -480,44 +480,44 @@ body.theme-white .white{color:var(--text)}
   </div>
 
   <div class="page" id="page-calendar">
-    <div class="cal-header">
-      <button class="cal-nav" onclick="calShift(-1)">‹</button>
-      <div class="cal-month" id="cal-month">—</div>
-      <button class="cal-today-btn" onclick="calToday()">Today</button>
-      <button class="cal-nav" onclick="calShift(1)">›</button>
+  <div class="cal-header">
+    <button class="cal-nav" onclick="calShift(-1)">‹</button>
+    <div class="cal-month" id="cal-month">—</div>
+    <button class="cal-today-btn" onclick="calToday()">Today</button>
+    <button class="cal-nav" onclick="calShift(1)">›</button>
+  </div>
+  <div class="cal-strip" id="cal-strip"></div>
+  <div class="cal-outer">
+    <div class="cal-grid-wrap">
+      <div class="cal-dow-row">
+        <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div>
+        <div class="cal-dow">Tue</div><div class="cal-dow">Wed</div>
+        <div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
+        <div class="cal-dow">Sat</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
     </div>
-    <div class="cal-strip" id="cal-strip"></div>
-    <div class="cal-outer">
-      <div class="cal-grid-wrap">
-        <div class="cal-dow-row">
-          <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div>
-          <div class="cal-dow">Tue</div><div class="cal-dow">Wed</div>
-          <div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
-          <div class="cal-dow">Sat</div>
-        </div>
-        <div class="cal-grid" id="cal-grid"></div>
-      </div>
-      <div class="cal-weeks-col">
-        <div class="cal-weeks-spacer"></div>
-        <div id="cal-weeks"></div>
-      </div>
-    </div>
-    <div class="monthly-chart-wrap">
-      <div class="monthly-chart-hdr">
-        <div>
-          <div class="monthly-chart-title">Monthly P&amp;L</div>
-          <div class="monthly-chart-total" id="mth-chart-total">—</div>
-        </div>
-        <select class="year-select" id="chart-year-select" onchange="renderMonthlyChart()"></select>
-      </div>
-      <div class="monthly-stats-row" id="mth-stats-row"></div>
-      <div class="chart-canvas-wrap" style="position:relative">
-        <canvas id="monthly-chart-canvas" style="display:block"></canvas>
-        <div class="chart-tooltip" id="chart-tooltip"></div>
-        <div class="chart-tooltip-dot" id="chart-tooltip-dot"></div>
-      </div>
+    <div class="cal-weeks-col">
+      <div class="cal-weeks-spacer"></div>
+      <div id="cal-weeks"></div>
     </div>
   </div>
+  <div class="monthly-chart-wrap">
+    <div class="monthly-chart-hdr">
+      <div>
+        <div class="monthly-chart-title">Monthly P&amp;L</div>
+        <div class="monthly-chart-total" id="mth-chart-total">—</div>
+      </div>
+      <select class="year-select" id="chart-year-select" onchange="renderMonthlyChart()"></select>
+    </div>
+    <div class="monthly-stats-row" id="mth-stats-row"></div>
+    <div class="chart-canvas-wrap" style="position:relative">
+      <canvas id="monthly-chart-canvas" style="display:block"></canvas>
+      <div class="chart-tooltip" id="chart-tooltip"></div>
+      <div class="chart-tooltip-dot" id="chart-tooltip-dot"></div>
+    </div>
+  </div>
+</div>
 
   <div class="page" id="page-account">
     <div id="acct-content"><div class="loading"><div class="spinner"></div>Loading...</div></div>
