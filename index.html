@@ -281,25 +281,26 @@ body.theme-white .white{color:var(--text)}
 .cal-day.red-day .day-pnl{color:var(--red)}
 .day-sub{font-size:6px;color:var(--text2);margin-top:1px;line-height:1.1;word-break:break-word}
 
-.cal-weeks-col{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-  width:50px;
-  flex-shrink:0;
+.cal-weeks-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 50px;
+  flex-shrink: 0;
 }
-.cal-weeks-spacer{
-  height:2px;
-  flex-shrink:0;
+.cal-weeks-spacer {
+  flex-shrink: 0;
 }
-.cal-week-card{
-  border-radius:5px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  padding:2px 4px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
+.cal-week-card {
+  border-radius: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2px 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 .cal-week-label{font-size:7px;color:var(--text2);font-weight:700}
 .cal-week-pnl{font-size:9px;font-weight:800;line-height:1.2}
@@ -1392,19 +1393,15 @@ function renderCalendar() {
 function alignWeekCards() {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      // Fix spacer to match DOW header height
       const dowRow = document.querySelector(".cal-dow-row");
       const spacer = document.querySelector(".cal-weeks-spacer");
       if (dowRow && spacer) {
-        spacer.style.height = dowRow.getBoundingClientRect().height + "px";
+        spacer.style.height = dowRow.getBoundingClientRect().height + 2 + "px";
       }
-
-      // Fix each week card height to match grid row
       const calGrid = document.getElementById("cal-grid");
       if (!calGrid) return;
       const allCells = calGrid.querySelectorAll(".cal-day");
       const numRows = allCells.length / 7;
-
       for (let r = 0; r < numRows; r++) {
         const cell = allCells[r * 7];
         const cardEl = document.getElementById("wcard-" + r);
