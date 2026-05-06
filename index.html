@@ -401,6 +401,14 @@ body.theme-white .white{color:var(--text)}
 
 /* PF SPARK — no label, just the canvas */
 .pf-spark-wrap{display:flex;align-items:center;justify-content:flex-end}
+  @media (max-width: 480px) {
+  .cal-weeks-col {
+    width: 42px;
+  }
+  .cal-week-card {
+    box-sizing: border-box;
+  }
+}
 </style>
 </head>
 <body>
@@ -1382,30 +1390,30 @@ function renderCalendar() {
 }
 
 function alignWeekCards() {
-  // Wait for layout to settle, then measure and set heights
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
+      // Fix spacer to match DOW header height
+      const dowRow = document.querySelector(".cal-dow-row");
+      const spacer = document.querySelector(".cal-weeks-spacer");
+      if (dowRow && spacer) {
+        spacer.style.height = dowRow.getBoundingClientRect().height + "px";
+      }
+
+      // Fix each week card height to match grid row
       const calGrid = document.getElementById("cal-grid");
       if (!calGrid) return;
-
       const allCells = calGrid.querySelectorAll(".cal-day");
-      const numCells = allCells.length;
-      if (!numCells) return;
-      const numRows = numCells / 7;
+      const numRows = allCells.length / 7;
 
       for (let r = 0; r < numRows; r++) {
-        const cellIndex = r * 7;
-        const cell = allCells[cellIndex];
-        if (!cell) continue;
-
-        const cellRect = cell.getBoundingClientRect();
+        const cell = allCells[r * 7];
         const cardEl = document.getElementById("wcard-" + r);
-        if (!cardEl || cellRect.height <= 0) continue;
-
-        // Set both height and flex sizing to exactly match the cell
-        cardEl.style.height = cellRect.height + "px";
-        cardEl.style.minHeight = cellRect.height + "px";
-        cardEl.style.maxHeight = cellRect.height + "px";
+        if (!cell || !cardEl) continue;
+        const h = cell.getBoundingClientRect().height;
+        if (h <= 0) continue;
+        cardEl.style.height = h + "px";
+        cardEl.style.minHeight = h + "px";
+        cardEl.style.maxHeight = h + "px";
       }
     });
   });
