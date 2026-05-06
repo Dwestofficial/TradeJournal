@@ -255,17 +255,23 @@ body.theme-white .white{color:var(--text)}
 }
 .cal-dow{text-align:center;font-size:8px;font-weight:700;color:var(--text2);padding:2px 0;text-transform:uppercase;line-height:1}
 
-.cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  align-items: start;  
+.cal-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:2px;
 }
-.cal-day.empty {
-  background: transparent;
-  border-color: transparent;
-  cursor: default;
-  aspect-ratio: 1;  
+.cal-day{
+  aspect-ratio:1;
+  border-radius:5px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  padding:2px 2px 1px;
+  display:flex;
+  flex-direction:column;
+  font-size:8px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:border-color 0.15s;
 }
 .cal-day.empty{background:transparent;border-color:transparent;cursor:default}
 .cal-day.green-day{background:rgba(0,200,150,0.05);border-color:rgba(0,200,150,0.2)}
@@ -1378,17 +1384,18 @@ function renderCalendar() {
 function alignWeekCards() {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      const calGrid = document.getElementById("cal-grid");
+      // Match spacer to DOW row height so week cards start at row 1
       const dowRow = document.querySelector(".cal-dow-row");
       const spacer = document.getElementById("cal-dow-spacer");
-      if (!calGrid || !dowRow || !spacer) return;
+      if (dowRow && spacer) {
+        const dowH = dowRow.getBoundingClientRect().height;
+        // Add 2px for the margin-bottom gap
+        spacer.style.height = (dowH + 2) + "px";
+      }
 
-      // Get the exact rendered height of the DOW row + gap (2px)
-      const dowH = dowRow.getBoundingClientRect().height + 2;
-      spacer.style.height = dowH + "px";
-
+      const calGrid = document.getElementById("cal-grid");
+      if (!calGrid) return;
       const allCells = calGrid.querySelectorAll(".cal-day");
-      if (!allCells.length) return;
       const numRows = allCells.length / 7;
 
       for (let r = 0; r < numRows; r++) {
@@ -1404,7 +1411,7 @@ function alignWeekCards() {
     });
   });
 }
-  
+
 window.addEventListener("resize", () => {
   if (currentPage === "calendar") alignWeekCards();
 });
