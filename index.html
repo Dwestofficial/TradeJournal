@@ -1291,11 +1291,11 @@ function calToday(){calYear=new Date().getFullYear();calMonth=new Date().getMont
 function tradeDate(t){const raw=t["Close Time"]||t["Open Time"]||"";const m=raw.match(/(\d{4})[.\-\/](\d{2})[.\-\/](\d{2})/);return m?`${m[1]}-${m[2]}-${m[3]}`:null;}
 function fmtK(v){const a=Math.abs(v);if(a>=1000)return(v<0?"-$":"$")+(a/1000).toFixed(a>=10000?0:1)+"K";return(v<0?"-$":"$")+a.toFixed(0);}
 
-function renderCalendar() {
-  document.getElementById("cal-month").textContent = `${MONTHS_FULL[calMonth]} ${calYear}`;
+function renderCalendar(){
+  document.getElementById("cal-month").textContent=`${MONTHS_FULL[calMonth]} ${calYear}`;
   const dayMap={};
   allTrades.forEach(t=>{
-    const dk=tradeDate(t); if(!dk)return;
+    const dk=tradeDate(t);if(!dk)return;
     const [y,m]=dk.split("-").map(Number);
     if(y!==calYear||m-1!==calMonth)return;
     if(!dayMap[dk])dayMap[dk]={net:0,wins:0,losses:0,trades:[]};
@@ -1304,15 +1304,41 @@ function renderCalendar() {
     if(t["Result"]==="WIN")dayMap[dk].wins++;else dayMap[dk].losses++;
     dayMap[dk].trades.push(t);
   });
-
   let mNet=0,mW=0,mL=0,mDays=0;
   Object.values(dayMap).forEach(d=>{mNet+=d.net;mW+=d.wins;mL+=d.losses;mDays++;});
-  const mTot=mW+mL, mWR=mTot>0?Math.round(mW/mTot*100):0;
+  const mTot=mW+mL,mWR=mTot>0?Math.round(mW/mTot*100):0;
   document.getElementById("cal-strip").innerHTML=
-    `<div class="cal-chip">P&L<span class="${mNet>=0?"pos":"neg"}">${fmtK(mNet)}</span></div>
-     <div class="cal-chip">Win Rate<span class="${mWR>=50?"pos":"neg"}">${mWR}%</span></div>
+    `<div class="cal-chip">P&L<span class="${mNet>=0?'pos':'neg'}">${fmtK(mNet)}</span></div>
+     <div class="cal-chip">Win Rate<span class="${mWR>=50?'pos':'neg'}">${mWR}%</span></div>
      <div class="cal-chip">Days<span class="b">${mDays}</span></div>
      <div class="cal-chip">Trades<span class="b">${mTot}</span></div>`;
+
+  const first=new Date(calYear,calMonth,1).getDay();
+  const days=new Date(calYear,calMonth+1,0).getDate();
+  const cells=[];
+  for(let i=0;i<first;i++)cells.push(null);
+  for(let d=1;d<=days;d++)cells.push(d);
+  while(cells.length%7!==0)cells.push(null);
+
+  const weekRows=[];
+  for(let w=0;w<cells.length/7;w++){
+    let wN=0,wD=0;
+    cells.slice(w*7,w*7+7).forEach(d=>{ if(!d)return; const dk=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; if(dayMap[dk]){wN+=dayMap[dk].net;wD++;} });
+    weekRows.push({wN,wD});
+  }
+
+  document.getElementById("cal-grid").innerHTML=cells.map(d=>{
+    if(!d)return`<div class="cal-day empty"></div>`;
+    const dk=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const data=dayMap[dk];
+    if(!data)return`<div class="cal-day"><div class="day-num">${d}</div></div>`;
+    const tot=data.wins+data.losses,isG=data.net>=0;
+    return`<div class="cal-day ${isG?'green-day':'red-day'}" onclick="openDaySheet('${dk}')"><div class="day-num">${d}</div><div class="day-pnl">${fmtK(data.net)}</div><div class="day-sub">${tot}T</div></div>`;
+  }).join("");
+
+  document.getElementById("cal-weeks").innerHTML=weekRows.map((w,i)=>
+    `<div class="cal-week-card"><div class="cal-week-label">Wk ${i+1}</div><div class="cal-week-pnl ${w.wN>=0?'pos':'neg'}">${fmtK(w.wN)}</div><div class="cal-week-days">${w.wD}d</div></div>`).join("");
+}
 
   const first=new Date(calYear,calMonth,1).getDay();
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
