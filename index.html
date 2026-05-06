@@ -231,102 +231,92 @@ body.theme-white .white{color:var(--text)}
 .add-review-btn{font-size:11px;color:var(--purple);background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.15);border-radius:18px;padding:4px 11px;cursor:pointer}
 
 /* ═══ CALENDAR — FIXED SPACING ═══ */
-#page-calendar{padding:10px 8px 14px}
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
-.cal-month{font-size:15px;font-weight:800;letter-spacing:-0.3px;color:var(--text)}
-.cal-nav{background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);width:32px;height:32px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.cal-today-btn{background:var(--green-bg);border:1px solid var(--green-border);border-radius:7px;color:var(--green);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer}
-.cal-strip{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+#page-calendar{padding:8px 8px 14px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 2px}
+.cal-month{font-size:14px;font-weight:800;letter-spacing:-0.3px;color:var(--text)}
+.cal-nav{background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cal-today-btn{background:var(--green-bg);border:1px solid var(--green-border);border-radius:7px;color:var(--green);padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.cal-strip{display:flex;gap:5px;margin-bottom:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .cal-strip::-webkit-scrollbar{display:none}
-.cal-chip{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:5px 12px;font-size:11px;white-space:nowrap;flex-shrink:0;color:var(--text2)}
-.cal-chip span{font-weight:700;margin-left:4px}
+.cal-chip{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 10px;font-size:10px;white-space:nowrap;flex-shrink:0;color:var(--text2)}
+.cal-chip span{font-weight:700;margin-left:3px}
 .cal-chip span.pos{color:var(--green)}.cal-chip span.neg{color:var(--red)}.cal-chip span.b{color:var(--text)}
 
-/* Calendar outer layout: grid fills remaining, weeks column fixed */
-.cal-outer{display:flex;gap:4px;align-items:flex-start;width:100%}
+.cal-outer{display:flex;gap:3px;align-items:flex-start;width:100%}
 .cal-grid-wrap{flex:1;min-width:0}
 
-/* DOW row must match grid columns exactly */
 .cal-dow-row{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:2px;
   margin-bottom:2px;
 }
-.cal-dow{text-align:center;font-size:9px;font-weight:700;color:var(--text2);padding:3px 0;text-transform:uppercase;line-height:1}
+.cal-dow{text-align:center;font-size:8px;font-weight:700;color:var(--text2);padding:2px 0;text-transform:uppercase;line-height:1}
 
-/* Calendar grid — uniform cells, no extra gap between row 1 and rest */
 .cal-grid{
   display:grid;
   grid-template-columns:repeat(7,1fr);
-  grid-auto-rows:1fr;  /* all rows same height */
   gap:2px;
 }
 
-/* Each day cell — aspect-ratio drives uniform square sizing */
 .cal-day{
   aspect-ratio:1;
-  border-radius:6px;
+  border-radius:5px;
   border:1px solid var(--border);
   background:var(--surface);
-  padding:3px 2px 2px;
+  padding:2px 2px 1px;
   display:flex;
   flex-direction:column;
-  font-size:9px;
+  font-size:8px;
   overflow:hidden;
   cursor:pointer;
   transition:border-color 0.15s;
 }
 .cal-day.empty{background:transparent;border-color:transparent;cursor:default}
-.cal-day.green-day{background:rgba(0,200,150,0.04);border-color:rgba(0,200,150,0.16)}
-.cal-day.red-day{background:rgba(224,85,85,0.04);border-color:rgba(224,85,85,0.16)}
-.day-num{font-size:9px;color:var(--text2);font-weight:700;line-height:1;margin-bottom:1px}
-.day-pnl{font-size:8px;font-weight:800;line-height:1.1;margin-top:1px;word-break:break-all}
+.cal-day.green-day{background:rgba(0,200,150,0.05);border-color:rgba(0,200,150,0.2)}
+.cal-day.red-day{background:rgba(224,85,85,0.05);border-color:rgba(224,85,85,0.2)}
+.day-num{font-size:8px;color:var(--text2);font-weight:700;line-height:1;margin-bottom:1px}
+.day-pnl{font-size:7px;font-weight:800;line-height:1.1;margin-top:1px;word-break:break-all}
 .cal-day.green-day .day-pnl{color:var(--green)}
 .cal-day.red-day .day-pnl{color:var(--red)}
-.day-sub{font-size:7px;color:var(--text2);margin-top:1px;line-height:1.2;word-break:break-word}
+.day-sub{font-size:6px;color:var(--text2);margin-top:1px;line-height:1.1;word-break:break-word}
 
-/* Week column — fixed width, aligns with grid rows */
 .cal-weeks-col{
   display:flex;
   flex-direction:column;
   gap:2px;
-  width:54px;
+  width:50px;
   flex-shrink:0;
 }
-/* Spacer height matches the DOW row (approx 22px) */
 .cal-weeks-spacer{
-  height:22px; /* matches .cal-dow-row height */
+  height:18px;
   flex-shrink:0;
 }
-/* Each week card must stretch to match its corresponding grid row */
 .cal-week-card{
-  border-radius:6px;
+  border-radius:5px;
   background:var(--surface);
   border:1px solid var(--border);
-  padding:3px 5px;
+  padding:2px 4px;
   display:flex;
   flex-direction:column;
   justify-content:center;
-  /* height is set dynamically via JS to match grid row */
 }
-.cal-week-label{font-size:8px;color:var(--text2);font-weight:700}
-.cal-week-pnl{font-size:10px;font-weight:800;line-height:1.2}
+.cal-week-label{font-size:7px;color:var(--text2);font-weight:700}
+.cal-week-pnl{font-size:9px;font-weight:800;line-height:1.2}
 .cal-week-pnl.pos{color:var(--green)}.cal-week-pnl.neg{color:var(--red)}
-.cal-week-days{font-size:8px;color:var(--text2)}
+.cal-week-days{font-size:7px;color:var(--text2)}
 
-/* MONTHLY CHART */
-.monthly-chart-wrap{margin:14px 0 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative}
-.monthly-chart-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
-.monthly-chart-title{font-size:12px;font-weight:800;color:var(--text)}
-.monthly-chart-total{font-size:22px;font-weight:900;letter-spacing:-0.5px}
-.monthly-stats-row{display:flex;gap:14px;margin:5px 0 12px}
-.ms-item{font-size:10px;color:var(--text2)}
+.monthly-chart-wrap{margin:10px 0 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;position:relative}
+.monthly-chart-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.monthly-chart-title{font-size:11px;font-weight:800;color:var(--text)}
+.monthly-chart-total{font-size:20px;font-weight:900;letter-spacing:-0.5px}
+.monthly-stats-row{display:flex;gap:10px;margin:4px 0 10px}
+.ms-item{font-size:9px;color:var(--text2)}
 .ms-item strong{color:var(--text);font-weight:700}
-.year-select{background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:12px;padding:4px 9px;cursor:pointer;outline:none}
-.chart-canvas-wrap{position:relative;height:180px}
-.chart-tooltip{position:absolute;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:11px;font-weight:700;color:var(--text);pointer-events:none;display:none;white-space:nowrap;z-index:20;transform:translateX(-50%)}
-.chart-tooltip-dot{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;display:none;z-index:21;transform:translate(-50%,-50%)}
+.year-select{background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:11px;padding:3px 8px;cursor:pointer;outline:none}
+.chart-canvas-wrap{position:relative;height:160px}
+.chart-tooltip{position:absolute;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:5px 9px;font-size:10px;font-weight:700;color:var(--text);pointer-events:none;display:none;white-space:nowrap;z-index:20;transform:translateX(-50%)}
+.chart-tooltip-dot{position:absolute;width:7px;height:7px;border-radius:50%;pointer-events:none;display:none;z-index:21;transform:translate(-50%,-50%)}
 
 /* ACCOUNT */
 .acct-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px}
