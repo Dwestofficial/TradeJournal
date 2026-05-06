@@ -470,28 +470,28 @@ body.theme-white .white{color:var(--text)}
     <div id="trades-content"><div class="loading"><div class="spinner"></div>Loading...</div></div>
   </div>
 
-<div class="page" id="page-calendar">
-  <div class="cal-header">
-    <button class="cal-nav" onclick="calShift(-1)">‹</button>
-    <div class="cal-month" id="cal-month">—</div>
-    <button class="cal-today-btn" onclick="calToday()">Today</button>
-    <button class="cal-nav" onclick="calShift(1)">›</button>
-  </div>
-  <div class="cal-strip" id="cal-strip"></div>
-  <div class="cal-outer">
-    <div class="cal-grid-wrap">
-      <div class="cal-dow-row">
-        <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div>
-        <div class="cal-dow">Tue</div><div class="cal-dow">Wed</div>
-        <div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
-        <div class="cal-dow">Sat</div>
+  <div class="page" id="page-calendar">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="calShift(-1)">‹</button>
+      <div class="cal-month" id="cal-month">—</div>
+      <button class="cal-today-btn" onclick="calToday()">This Month</button>
+      <button class="cal-nav" onclick="calShift(1)">›</button>
+    </div>
+    <div class="cal-strip" id="cal-strip"></div>
+    <div class="cal-outer">
+      <div class="cal-grid-wrap">
+        <div class="cal-dow-row">
+          <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div>
+          <div class="cal-dow">Tue</div><div class="cal-dow">Wed</div>
+          <div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
+          <div class="cal-dow">Sat</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
       </div>
-      <div class="cal-grid" id="cal-grid"></div>
-    </div>
-    <div style="position:relative;flex-shrink:0;width:50px;">
-      <div class="cal-weeks-spacer" id="cal-dow-spacer"></div>
-      <div class="cal-weeks-col" id="cal-weeks"></div>
-    </div>
+      <div class="cal-weeks-col">
+        <div class="cal-weeks-spacer"></div>
+        <div id="cal-weeks"></div>
+      </div>
   </div>
   <div class="monthly-chart-wrap">
     <div class="monthly-chart-hdr">
