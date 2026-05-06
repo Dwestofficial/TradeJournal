@@ -232,6 +232,7 @@ body.theme-white .white{color:var(--text)}
 
 /* ═══ CALENDAR — FIXED SPACING ═══ */
 /* ═══ CALENDAR ═══ */
+/* ═══ CALENDAR ═══ */
 #page-calendar{padding:8px 8px 14px}
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 2px}
 .cal-month{font-size:14px;font-weight:800;letter-spacing:-0.3px;color:var(--text)}
@@ -259,7 +260,6 @@ body.theme-white .white{color:var(--text)}
   grid-template-columns:repeat(7,1fr);
   gap:2px;
 }
-
 .cal-day{
   aspect-ratio:1;
   border-radius:5px;
@@ -282,13 +282,12 @@ body.theme-white .white{color:var(--text)}
 .cal-day.red-day .day-pnl{color:var(--red)}
 .day-sub{font-size:6px;color:var(--text2);margin-top:1px;line-height:1.1;word-break:break-word}
 
+.cal-weeks-spacer{flex-shrink:0}
 .cal-weeks-col{
   display:flex;
   flex-direction:column;
   gap:2px;
   width:50px;
-  flex-shrink:0;
-  margin-top:0;
 }
 .cal-week-card{
   border-radius:5px;
@@ -487,7 +486,7 @@ body.theme-white .white{color:var(--text)}
     <div id="trades-content"><div class="loading"><div class="spinner"></div>Loading...</div></div>
   </div>
 
-  <div class="page" id="page-calendar">
+<div class="page" id="page-calendar">
   <div class="cal-header">
     <button class="cal-nav" onclick="calShift(-1)">‹</button>
     <div class="cal-month" id="cal-month">—</div>
@@ -495,17 +494,20 @@ body.theme-white .white{color:var(--text)}
     <button class="cal-nav" onclick="calShift(1)">›</button>
   </div>
   <div class="cal-strip" id="cal-strip"></div>
-  <div class="cal-dow-row">
-    <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div>
-    <div class="cal-dow">Tue</div><div class="cal-dow">Wed</div>
-    <div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
-    <div class="cal-dow">Sat</div>
-  </div>
   <div class="cal-outer">
     <div class="cal-grid-wrap">
+      <div class="cal-dow-row">
+        <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div>
+        <div class="cal-dow">Tue</div><div class="cal-dow">Wed</div>
+        <div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
+        <div class="cal-dow">Sat</div>
+      </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
-    <div class="cal-weeks-col" id="cal-weeks"></div>
+    <div style="position:relative;flex-shrink:0;width:50px;">
+      <div class="cal-weeks-spacer" id="cal-dow-spacer"></div>
+      <div class="cal-weeks-col" id="cal-weeks"></div>
+    </div>
   </div>
   <div class="monthly-chart-wrap">
     <div class="monthly-chart-hdr">
@@ -1356,7 +1358,6 @@ function renderCalendar() {
     </div>`;
   }).join("");
 
-  // Build week summaries - NO spacer, cards go directly into flex col
   const weekRows = [];
   for(let w=0;w<numRows;w++){
     let wN=0,wD=0;
@@ -1383,49 +1384,36 @@ function renderCalendar() {
 function alignWeekCards() {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      const calGrid = document.getElementById("cal-grid");
-      const weeksContainer = document.getElementById("cal-weeks");
-      if (!calGrid || !weeksContainer) return;
-
-      const allCells = calGrid.querySelectorAll(".cal-day");
-      const numRows = allCells.length / 7;
-      const gridRect = calGrid.getBoundingClientRect();
-      const weeksRect = weeksContainer.getBoundingClientRect();
-
-      for (let r = 0; r < numRows; r++) {
-        const firstCellInRow = allCells[r * 7];
-        const lastCellInRow = allCells[Math.min(r * 7 + 6, allCells.length - 1)];
-        const cardEl = document.getElementById("wcard-" + r);
-        if (!firstCellInRow || !cardEl) continue;
-
-        const topRect = firstCellInRow.getBoundingClientRect();
-        const botRect = lastCellInRow.getBoundingClientRect();
-
-        // Height = bottom of last cell - top of first cell in this row
-        const rowHeight = botRect.bottom - topRect.top;
-        if (rowHeight <= 0) continue;
-
-        // Position the card to align with this row
-        const topOffset = topRect.top - weeksRect.top;
-
-        cardEl.style.position = "absolute";
-        cardEl.style.top = topOffset + "px";
-        cardEl.style.height = rowHeight + "px";
-        cardEl.style.left = "0";
-        cardEl.style.right = "0";
+      // Match spacer to DOW row height so week cards start at row 1
+      const dowRow = document.querySelector(".cal-dow-row");
+      const spacer = document.getElementById("cal-dow-spacer");
+      if (dowRow && spacer) {
+        const dowH = dowRow.getBoundingClientRect().height;
+        // Add 2px for the margin-bottom gap
+        spacer.style.height = (dowH + 2) + "px";
       }
 
-      // Make the weeks container relatively positioned and match grid height
-      weeksContainer.style.position = "relative";
-      weeksContainer.style.height = gridRect.height + "px";
+      const calGrid = document.getElementById("cal-grid");
+      if (!calGrid) return;
+      const allCells = calGrid.querySelectorAll(".cal-day");
+      const numRows = allCells.length / 7;
+
+      for (let r = 0; r < numRows; r++) {
+        const cell = allCells[r * 7];
+        const cardEl = document.getElementById("wcard-" + r);
+        if (!cell || !cardEl) continue;
+        const h = cell.getBoundingClientRect().height;
+        if (h <= 0) continue;
+        cardEl.style.height = h + "px";
+        cardEl.style.minHeight = h + "px";
+        cardEl.style.maxHeight = h + "px";
+      }
     });
   });
 }
 
 window.addEventListener("resize", () => {
-  if (currentPage === "calendar") {
-    alignWeekCards();
-  }
+  if (currentPage === "calendar") alignWeekCards();
 });
 
 function openDaySheet(dk){
