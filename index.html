@@ -1420,7 +1420,7 @@ function renderAssets(trades) {
     <div class="legend-item">
       <div class="legend-left">
         <div class="legend-dot" style="background:${colors[i]}"></div>
-        <div class="legend-sym"><span style="color:var(--muted);font-weight:700;margin-right:6px;font-feature-settings:&quot;tnum&quot;">${a.pct}%</span>${esc(a.sym)}</div>
+        <div class="legend-sym"><span style="color:var(--muted);font-weight:600;font-size:10px;margin-right:8px;font-feature-settings:&quot;tnum&quot;;display:inline-block;width:42px;text-align:right">${a.pct}%</span>${esc(a.sym)}</div>
       </div>
       <div class="legend-amt ${a.net>=0?'pos':'neg'}">${fmtMoney(a.net,{showPlus:true,digits:0})}</div>
     </div>`).join("");
