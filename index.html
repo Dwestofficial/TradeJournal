@@ -1420,7 +1420,7 @@ function renderAssets(trades) {
     <div class="legend-item">
       <div class="legend-left">
         <div class="legend-dot" style="background:${colors[i]}"></div>
-        <div class="legend-sym">${esc(a.sym)}</div>
+        <div class="legend-sym"><span style="color:var(--muted);font-weight:700;margin-right:6px;font-feature-settings:&quot;tnum&quot;">${a.pct}%</span>${esc(a.sym)}</div>
       </div>
       <div class="legend-amt ${a.net>=0?'pos':'neg'}">${fmtMoney(a.net,{showPlus:true,digits:0})}</div>
     </div>`).join("");
@@ -1572,7 +1572,7 @@ function renderCalendar(){
     const data=dayMap[dk];
     if(!data)return`<div class="cal-day"><div class="day-num">${d}</div></div>`;
     const tot=data.wins+data.losses,isG=data.net>=0;
-    return`<div class="cal-day ${isG?'green-day':'red-day'}" onclick="openDaySheet('${dk}')"><div class="day-num">${d}</div><div class="day-pnl">${fmtK(data.net)}</div><div class="day-sub">${tot}T</div></div>`;
+    return`<div class="cal-day ${isG?'green-day':'red-day'}" onclick="openDaySheet('${dk}')"><div class="day-num">${d}</div><div class="day-pnl">${fmtK(data.net)}</div><div class="day-sub">${tot} ${tot===1?'Trade':'Trades'}</div></div>`;
   }).join("");
 
   document.getElementById("cal-weeks").innerHTML=weekRows.map((w,i)=>
@@ -1706,7 +1706,7 @@ function openDaySheet(dk){
   totEl.className="sheet-total "+(net>=0?"green":"red");
   document.getElementById("sheet-trades").innerHTML=trades.map(t=>{
     const isWin=t["Result"]==="WIN",n=parseFloat(t["Net P&L"]||0),key=tradeKey(t);
-    return`<div class="trade-card ${isWin?'win':'loss'}" style="cursor:pointer" onclick="document.getElementById('day-overlay').classList.remove('show');setTimeout(()=>openReview('${esc(key)}'),200)"><div class="trade-header"><div class="trade-symbol">${esc(t["Symbol"]||"—")}</div><div class="amount" style="color:${isWin?'var(--green)':'var(--red)'}">${fmtMoney(Math.round(n*100)/100,{showPlus:true,digits:2})}</div></div></div>`;
+    return`<div class="trade-card ${isWin?'win':'loss'}" style="cursor:pointer" onclick="document.getElementById('day-overlay').classList.remove('show');setTimeout(()=>openReview('${esc(key)}'),200)"><div class="trade-header"><div class="trade-symbol">${esc(t["Symbol"]||"—")}</div><div class="amount" style="color:${isWin?'var(--green)':'var(--red)'}">${fmtMoney(Math.round(n*100)/100,{showPlus:true,digits:2})}<span style="font-size:10px;font-weight:600;margin-left:6px;opacity:0.85">${(()=>{const p=parseFloat(t["P&L %"]||0);return isNaN(p)||p===0?'':(p>=0?'+':'')+p.toFixed(2)+'%';})()}</span></div></div></div>`;
   }).join("");
   document.getElementById("day-overlay").classList.add("show");
 }
