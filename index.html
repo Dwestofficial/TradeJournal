@@ -247,11 +247,12 @@ body{padding-bottom:96px}
 .equity-card{
   position:relative;overflow:hidden;
   background:
-    radial-gradient(120% 100% at 100% 0%, var(--green-soft) 0%, transparent 55%),
-    var(--surface);
+    radial-gradient(140% 90% at 100% 0%, var(--green-soft) 0%, transparent 60%),
+    linear-gradient(180deg, color-mix(in oklab, var(--surface) 92%, transparent), var(--surface));
   border:1px solid var(--border);
-  border-radius:18px;padding:18px 18px 14px;margin-bottom:14px;
-  box-shadow:0 8px 28px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.03);
+  border-radius:16px;padding:14px 16px 10px;margin-bottom:12px;
+  box-shadow:0 6px 22px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter:blur(8px);
 }
 .equity-head{display:flex;align-items:center;gap:9px;margin-bottom:2px}
 .equity-title{font-size:14px;font-weight:700;letter-spacing:-0.3px}
@@ -263,17 +264,17 @@ body{padding-bottom:96px}
 }
 .live-pill .lp-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.6s infinite}
 .equity-sub{font-size:10.5px;color:var(--muted);margin-bottom:12px;letter-spacing:0}
-.equity-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:4px;font-weight:600}
-.equity-val{font-size:30px;font-weight:800;line-height:1;letter-spacing:-1.2px;font-feature-settings:"tnum"}
+.equity-label{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1.6px;margin-bottom:3px;font-weight:700}
+.equity-val{font-size:26px;font-weight:800;line-height:1;letter-spacing:-1px;font-feature-settings:"tnum"}
 .equity-delta{
-  display:inline-flex;align-items:center;gap:4px;margin-top:8px;
-  font-size:10.5px;font-weight:700;color:var(--green);
+  display:inline-flex;align-items:center;gap:4px;margin-top:6px;
+  font-size:10px;font-weight:700;color:var(--green);
   background:rgba(0,212,170,0.10);border:1px solid rgba(0,212,170,0.22);
-  padding:2px 8px;border-radius:6px;
+  padding:2px 7px;border-radius:6px;
 }
 .equity-delta.neg{color:var(--red);background:rgba(224,82,82,0.10);border-color:rgba(224,82,82,0.22)}
 .equity-delta-sub{font-size:9.5px;color:var(--muted);margin-left:6px}
-.equity-chart-wrap{position:relative;width:100%;height:120px;margin-top:14px;pointer-events:none}
+.equity-chart-wrap{position:relative;width:100%;height:88px;margin-top:8px;pointer-events:none}
 .equity-chart-wrap svg{width:100%;height:100%;display:block}
 
 /* ── KPI ROW (wide stat) ── */
@@ -577,6 +578,15 @@ body{padding-bottom:96px}
   cursor:pointer;margin-top:18px;transition:opacity 0.15s;
 }
 .save-review-btn:disabled{opacity:0.4;cursor:not-allowed}
+.tag-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.tag-chip{
+  font-size:11px;font-weight:600;padding:6px 11px;border-radius:20px;
+  background:var(--surface2);border:1px solid var(--border);color:var(--text2);
+  cursor:pointer;transition:all 0.15s;user-select:none;
+}
+.tag-chip:hover{border-color:var(--border2)}
+.tag-chip.active.good{background:rgba(34,195,154,0.12);border-color:rgba(34,195,154,0.4);color:var(--green)}
+.tag-chip.active.bad{background:rgba(217,106,106,0.12);border-color:rgba(217,106,106,0.4);color:var(--red)}
 
 /* ── DAY SHEET ── */
 .day-overlay{
@@ -644,8 +654,8 @@ body{padding-bottom:96px}
 .legend-list{flex:1;display:flex;flex-direction:column;gap:8px}
 .legend-item{display:flex;align-items:center;gap:8px;justify-content:flex-start}
 .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;order:1}
-.legend-sym{font-size:11.5px;font-weight:700;order:2;min-width:62px;text-align:left}
-.legend-amt{font-size:12px;font-weight:800;font-feature-settings:"tnum";order:3;flex:1;text-align:right}
+.legend-sym{font-size:11.5px;font-weight:700;order:2;text-align:left;white-space:nowrap}
+.legend-amt{font-size:12px;font-weight:800;font-feature-settings:"tnum";order:3;margin-left:6px;text-align:left}
 .legend-amt.pos{color:var(--green)}
 .legend-amt.neg{color:var(--red)}
 .pnl-dist-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
@@ -915,6 +925,10 @@ body{padding-bottom:96px}
           <button class="star-btn" data-s="5" onclick="setStar(5)">★</button>
         </div>
         <div class="star-lbl" id="star-lbl">Tap to rate</div>
+        <div class="review-sec">What went well</div>
+        <div class="tag-grid" id="tags-good"></div>
+        <div class="review-sec">What to improve</div>
+        <div class="tag-grid" id="tags-bad"></div>
         <div class="review-sec">Your thoughts</div>
         <textarea class="thoughts" id="thoughts" placeholder="Notes about this trade..." rows="4"></textarea>
         <button class="save-review-btn" id="save-btn" onclick="submitReview()">Save Review ⭐</button>
@@ -931,6 +945,8 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZ_0G6RHJTBKfIc708I
 
 const ASSET_COLORS = ['#00d4aa','#4a9eff','#e05252','#d4a017','#9b6dff','#56d364','#ff7b72','#79c0ff','#ffa657'];
 const STAR_LABELS  = ["","Terrible","Poor","Average","Good","Excellent"];
+const TAGS_GOOD    = ["Followed plan","Clean entry","Good R:R","Patience","Trend trade","Risk managed"];
+const TAGS_BAD     = ["FOMO entry","No stop loss","Overtraded","Revenge trade","Moved SL","Closed early"];
 const MONTH_NAMES  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const MONTHS_FULL  = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -942,6 +958,7 @@ let calYear      = new Date().getFullYear();
 let calMonth     = new Date().getMonth();
 let reviewTrade  = null;
 let reviewStar   = 0;
+let reviewTags   = {good:[], bad:[]};
 let reviewsCache = {};
 
 try { reviewsCache = JSON.parse(localStorage.getItem("f1_reviews") || "{}"); }
@@ -1699,6 +1716,7 @@ function openReview(key){
   reviewTrade=t;
   const rev=reviewsCache[key]||{};
   reviewStar=rev.star||0;
+  reviewTags={good:Array.isArray(rev.good)?rev.good.slice():[], bad:Array.isArray(rev.bad)?rev.bad.slice():[]};
   const isWin=t["Result"]==="WIN",isLong=(t["Direction"]||"").toUpperCase()==="BUY";
   const net=parseFloat(t["Net P&L"]||0),rr=parseFloat(t["R:R"]||0);
   const rrDisplay=!isNaN(rr)&&rr>0?rr.toFixed(2)+'R':'—';
@@ -1715,6 +1733,7 @@ function openReview(key){
       <div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Duration</div><div style="font-size:11px;font-weight:600">${t["Duration"]||"—"}</div></div>
     </div>`;
   renderStars(reviewStar);
+  renderTags();
   document.getElementById("thoughts").value=rev.thought||"";
   const btn=document.getElementById("save-btn");
   btn.disabled=false;btn.textContent="Save Review ⭐";
@@ -1725,13 +1744,27 @@ function closeReview(){ document.getElementById("review-overlay").classList.remo
 function maybeCloseReview(e){ if(e.target===document.getElementById("review-overlay"))closeReview(); }
 function renderStars(n){ document.querySelectorAll(".star-btn").forEach(b=>b.classList.toggle("active",+b.dataset.s<=n)); document.getElementById("star-lbl").textContent=n>0?STAR_LABELS[n]:"Tap to rate"; }
 function setStar(n){ reviewStar=n; renderStars(n); }
+function renderTags(){
+  const mk=(arr,sel,cls)=>{
+    document.getElementById(sel).innerHTML=arr.map(t=>
+      `<div class="tag-chip ${cls} ${reviewTags[cls].includes(t)?'active':''}" onclick="toggleTag('${cls}','${t.replace(/'/g,"\\'")}')">${t}</div>`
+    ).join("");
+  };
+  mk(TAGS_GOOD,"tags-good","good");
+  mk(TAGS_BAD,"tags-bad","bad");
+}
+function toggleTag(cls,t){
+  const a=reviewTags[cls], i=a.indexOf(t);
+  if(i>=0)a.splice(i,1); else a.push(t);
+  renderTags();
+}
 
 async function submitReview(){
   const thought=document.getElementById("thoughts").value.trim();
   const btn=document.getElementById("save-btn");
   btn.disabled=true;btn.textContent="Saving...";
   const key=tradeKey(reviewTrade);
-  reviewsCache[key]={star:reviewStar,thought};
+  reviewsCache[key]={star:reviewStar,thought,good:reviewTags.good.slice(),bad:reviewTags.bad.slice()};
   try{localStorage.setItem("f1_reviews",JSON.stringify(reviewsCache));}catch(e){}
   try{
     await fetch(SCRIPT_URL,{
