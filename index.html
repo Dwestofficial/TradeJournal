@@ -651,11 +651,12 @@ body{padding-bottom:96px}
 .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
 .dc-count{font-size:18px;font-weight:800;letter-spacing:-0.5px}
 .dc-lbl{font-size:8.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px}
-.legend-list{flex:1;display:flex;flex-direction:column;gap:8px}
-.legend-item{display:flex;align-items:center;gap:8px;justify-content:flex-start}
-.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;order:1}
-.legend-sym{font-size:11.5px;font-weight:700;order:2;text-align:left;white-space:nowrap}
-.legend-amt{font-size:12px;font-weight:800;font-feature-settings:"tnum";order:3;margin-left:6px;text-align:left}
+.legend-list{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.legend-item{display:flex;align-items:center;gap:8px;justify-content:space-between;width:100%}
+.legend-left{display:flex;align-items:center;gap:8px;min-width:0}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.legend-sym{font-size:11.5px;font-weight:700;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.legend-amt{font-size:12px;font-weight:800;font-feature-settings:"tnum";margin-left:auto;text-align:right;white-space:nowrap;flex-shrink:0}
 .legend-amt.pos{color:var(--green)}
 .legend-amt.neg{color:var(--red)}
 .pnl-dist-lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
@@ -952,6 +953,34 @@ const MONTHS_FULL  = ["January","February","March","April","May","June","July","
 
 let USER_UID     = localStorage.getItem("f1_uid") || "";
 let allTrades    = [];
+
+// ── Currency detection from connected account ──
+const CURRENCY_SYMBOLS = {
+  USD:'$', EUR:'€', GBP:'£', JPY:'¥', CNY:'¥', CHF:'CHF ', CAD:'CA$', AUD:'A$', NZD:'NZ$',
+  HKD:'HK$', SGD:'S$', INR:'₹', KRW:'₩', RUB:'₽', BRL:'R$', MXN:'MX$', ZAR:'R',
+  TRY:'₺', PLN:'zł', SEK:'kr ', NOK:'kr ', DKK:'kr ', AED:'د.إ', SAR:'﷼', THB:'฿',
+  IDR:'Rp', MYR:'RM', PHP:'₱', VND:'₫', ILS:'₪', CZK:'Kč', HUF:'Ft', RON:'lei',
+  BTC:'₿', ETH:'Ξ', USDT:'$', USDC:'$'
+};
+function getAccountCurrency(){
+  const t = (allTrades && allTrades[0]) || null;
+  const code = (t && (t["Account Currency"]||t["Currency"]) || 'USD').toString().toUpperCase().trim();
+  return code || 'USD';
+}
+function curSym(code){
+  const c = (code||getAccountCurrency()).toUpperCase();
+  return CURRENCY_SYMBOLS[c] || (c+' ');
+}
+function fmtMoney(v, opts){
+  opts = opts||{};
+  const sym = curSym();
+  const sign = v>=0 ? (opts.showPlus?'+':'') : '-';
+  const abs = Math.abs(v);
+  const digits = (opts.digits!=null) ? opts.digits : 2;
+  const str = abs.toLocaleString(undefined,{minimumFractionDigits:digits,maximumFractionDigits:digits});
+  return sign + sym + str;
+}
+
 let activeFilter = "all";
 let currentPage  = "dashboard";
 let calYear      = new Date().getFullYear();
@@ -1193,7 +1222,7 @@ function equityCardHTML(s,info,trades){
   return `
   <div class="equity-card">
     <div class="equity-label">Total Net P&amp;L</div>
-    <div class="equity-val" style="color:${color}">${isPos?'+':''}$${Math.abs(s.totalNet).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    <div class="equity-val" style="color:${color}">${fmtMoney(s.totalNet,{showPlus:true,digits:2})}</div>
     <div>
       <span class="equity-delta ${pctPos?'':'neg'}">${pctPos?'↑':'↓'} ${Math.abs(pct)}%</span>
       <span class="equity-delta-sub">vs last 30 days</span>
@@ -1325,10 +1354,10 @@ function renderDashboard() {
       </div>
       <div class="stat-icon-card">
         <div class="lbl">Expectancy</div>
-        <div class="v ${s.expectancy>=0?'green':'red'}">${s.expectancy>=0?'+':''}$${s.expectancy}</div>
+        <div class="v ${s.expectancy>=0?'green':'red'}">${fmtMoney(s.expectancy,{showPlus:true,digits:2})}</div>
         <div class="badge" style="background:${s.expectancy>=0?'rgba(0,212,170,0.10)':'rgba(217,106,106,0.10)'};border:1px solid ${s.expectancy>=0?'rgba(0,212,170,0.25)':'rgba(217,106,106,0.30)'}">
           ${ringHTML(s.expectancy>=0?Math.min(s.expectancy/200,1):0, s.expectancy>=0?'#00d4aa':'#d96a6a')}
-          <div style="position:absolute;color:${s.expectancy>=0?'#00d4aa':'#d96a6a'};font-weight:800;font-size:14px">$</div>
+          <div style="position:absolute;color:${s.expectancy>=0?'#00d4aa':'#d96a6a'};font-weight:800;font-size:14px">${curSym().trim()||'$'}</div>
         </div>
       </div>
       <div class="stat-icon-card">
@@ -1352,14 +1381,14 @@ function renderDashboard() {
       </div>
       <div class="stat-icon-card green-accent">
         <div class="lbl">Best Trade</div>
-        <div class="v green">+$${s.bestTrade}</div>
+        <div class="v green">${fmtMoney(s.bestTrade,{showPlus:true,digits:2})}</div>
         <div class="badge" style="background:rgba(0,212,170,0.10);border:1px solid rgba(0,212,170,0.25)">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M5 4H3v2a3 3 0 003 3M19 4h2v2a3 3 0 01-3 3"/></svg>
         </div>
       </div>
       <div class="stat-icon-card red-accent">
         <div class="lbl">Worst Trade</div>
-        <div class="v red">$${s.worstTrade}</div>
+        <div class="v red">${fmtMoney(s.worstTrade,{digits:2})}</div>
         <div class="badge" style="background:rgba(224,82,82,0.10);border:1px solid rgba(224,82,82,0.25)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e05252" stroke-width="2.2" stroke-linecap="round"><path d="M7 7l10 10M17 9v8h-8"/></svg>
         </div>
@@ -1387,9 +1416,11 @@ function renderAssets(trades) {
   const cid="donut_"+Date.now();
   const legend=assets.map((a,i)=>`
     <div class="legend-item">
-      <div class="legend-dot" style="background:${colors[i]}"></div>
-      <div class="legend-sym">${esc(a.sym)}</div>
-      <div class="legend-amt ${a.net>=0?'pos':'neg'}">${a.net>=0?'+$':'-$'}${Math.abs(a.net).toFixed(0)}</div>
+      <div class="legend-left">
+        <div class="legend-dot" style="background:${colors[i]}"></div>
+        <div class="legend-sym">${esc(a.sym)}</div>
+      </div>
+      <div class="legend-amt ${a.net>=0?'pos':'neg'}">${fmtMoney(a.net,{showPlus:true,digits:0})}</div>
     </div>`).join("");
   setTimeout(()=>drawDonut(cid,assets.map(a=>a.count),colors),30);
   return`<div class="assets-card">
@@ -1463,7 +1494,7 @@ function renderTrades(){
     <div style="width:1px;height:30px;background:var(--border)"></div>
     <div style="flex:1;text-align:center"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Avg R:R</div><div style="font-size:16px;font-weight:700;color:${s.avgRR>=1?'var(--green)':'var(--yellow)'}">${s.avgRR > 0 ? '1 : '+s.avgRR.toFixed(2) : '—'}</div></div>
     <div style="width:1px;height:30px;background:var(--border)"></div>
-    <div style="flex:1;text-align:center"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Net P&L</div><div style="font-size:16px;font-weight:700;color:${s.totalNet>=0?'var(--green)':'var(--red)'}">${s.totalNet>=0?'+':''}$${s.totalNet}</div></div>
+    <div style="flex:1;text-align:center"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Net P&L</div><div style="font-size:16px;font-weight:700;color:${s.totalNet>=0?'var(--green)':'var(--red)'}">${fmtMoney(s.totalNet,{showPlus:true,digits:2})}</div></div>
   </div>` : '';
   document.getElementById("trades-content").innerHTML=rrHeader+trades.map(t=>tradeCardHTML(t)).join("");
 }
@@ -1481,7 +1512,7 @@ function tradeCardHTML(t){
   return`<div class="trade-card ${isWin?'win':'loss'}" onclick="openReview('${esc(key)}')">
     <div class="trade-header">
       <div><div class="trade-symbol">${esc(t["Symbol"]||"—")}</div><div class="trade-dir ${isLong?'buy':'sell'}">${isLong?'▲ BUY':'▼ SELL'}</div></div>
-      <div class="trade-pnl"><div class="amount" style="color:${isWin?'var(--green)':'var(--red)'}">${net>=0?'+':''}$${Math.round(net*100)/100}</div><div class="pct">${pct>=0?'+':''}${Math.round(pct*100)/100}%</div></div>
+      <div class="trade-pnl"><div class="amount" style="color:${isWin?'var(--green)':'var(--red)'}">${fmtMoney(net,{showPlus:true,digits:2})}</div><div class="pct">${pct>=0?'+':''}${Math.round(pct*100)/100}%</div></div>
     </div>
     <div class="trade-details">
       <div><div class="d-label">Entry</div><div class="d-val">${t["Entry Price"]||"—"}</div></div>
@@ -1495,7 +1526,7 @@ function tradeCardHTML(t){
 function calShift(d){ calMonth+=d; if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
 function calToday(){ calYear=new Date().getFullYear(); calMonth=new Date().getMonth(); renderCalendar(); }
 function tradeDate(t){ const raw=t["Close Time"]||t["Open Time"]||""; const m=raw.match(/(\d{4})[.\-\/](\d{2})[.\-\/](\d{2})/); return m?`${m[1]}-${m[2]}-${m[3]}`:null; }
-function fmtK(v){ const a=Math.abs(v); if(a>=1000)return(v<0?'-$':'$')+(a/1000).toFixed(a>=10000?0:1)+'K'; return(v<0?'-$':'$')+a.toFixed(0); }
+function fmtK(v){ const sym=curSym(); const a=Math.abs(v); const s=v<0?'-':''; if(a>=1000)return s+sym+(a/1000).toFixed(a>=10000?0:1)+'K'; return s+sym+a.toFixed(0); }
 
 function renderCalendar(){
   document.getElementById("cal-month").textContent=`${MONTHS_FULL[calMonth]} ${calYear}`;
@@ -1669,11 +1700,11 @@ function openDaySheet(dk){
   const[y,m,d]=dk.split("-");
   document.getElementById("sheet-ttl").textContent=new Date(+y,+m-1,+d).toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const totEl=document.getElementById("sheet-total");
-  totEl.textContent=(net>=0?'+$':'-$')+Math.abs(Math.round(net*100)/100);
+  totEl.textContent=fmtMoney(Math.round(net*100)/100,{showPlus:true,digits:2});
   totEl.className="sheet-total "+(net>=0?"green":"red");
   document.getElementById("sheet-trades").innerHTML=trades.map(t=>{
     const isWin=t["Result"]==="WIN",n=parseFloat(t["Net P&L"]||0),key=tradeKey(t);
-    return`<div class="trade-card ${isWin?'win':'loss'}" style="cursor:pointer" onclick="document.getElementById('day-overlay').classList.remove('show');setTimeout(()=>openReview('${esc(key)}'),200)"><div class="trade-header"><div class="trade-symbol">${esc(t["Symbol"]||"—")}</div><div class="amount" style="color:${isWin?'var(--green)':'var(--red)'}">${n>=0?'+':''}$${Math.round(n*100)/100}</div></div></div>`;
+    return`<div class="trade-card ${isWin?'win':'loss'}" style="cursor:pointer" onclick="document.getElementById('day-overlay').classList.remove('show');setTimeout(()=>openReview('${esc(key)}'),200)"><div class="trade-header"><div class="trade-symbol">${esc(t["Symbol"]||"—")}</div><div class="amount" style="color:${isWin?'var(--green)':'var(--red)'}">${fmtMoney(Math.round(n*100)/100,{showPlus:true,digits:2})}</div></div></div>`;
   }).join("");
   document.getElementById("day-overlay").classList.add("show");
 }
@@ -1701,10 +1732,10 @@ function renderAccount(){
       </div>
       <div class="balance-strip">
         <span class="bs-label">Running P&amp;L Balance</span>
-        <span class="bs-val" style="color:${bal>=0?'var(--green)':'var(--red)'}">${bal>=0?'+':''}$${bal}</span>
+        <span class="bs-val" style="color:${bal>=0?'var(--green)':'var(--red)'}">${fmtMoney(bal,{showPlus:true,digits:2})}</span>
       </div>
       <div class="acct-stats">
-        <div><div class="as-label">Net P&amp;L</div><div class="as-val ${s.totalNet>=0?'green':'red'}">${s.totalNet>=0?'+':''}$${s.totalNet}</div></div>
+        <div><div class="as-label">Net P&amp;L</div><div class="as-val ${s.totalNet>=0?'green':'red'}">${fmtMoney(s.totalNet,{showPlus:true,digits:2})}</div></div>
         <div><div class="as-label">Win Rate</div><div class="as-val ${s.winRate>=50?'green':'red'}">${s.winRate}%</div></div>
         <div><div class="as-label">Avg R:R</div><div class="as-val ${s.avgRR>=1?'green':'yellow'}">${s.avgRR > 0 ? s.avgRR+'R' : '—'}</div></div>
       </div>
